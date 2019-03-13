@@ -1,4 +1,15 @@
-# generic routine to plot the orbits computed with `run.simulation`
+#' Visualize an N-body simulation
+#'
+#' Description
+#'
+#' @importFrom magicaxis magplot
+#'
+#' @param sim is an output of \code{run.simulation}
+#'
+#' @author Danail Obreschkow
+#'
+#' @export plot.simulation
+
 plot.simulation = function(sim, units, cex=0.3, pch=20, title='', ...) {
   par(pty='s')
   magplot(NA,NA, ...)
