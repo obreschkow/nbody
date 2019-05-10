@@ -1,4 +1,11 @@
-#' Global variables
+#' @title Physical constants
+#'
+#' @description Useful physical constants in SI units.
+#'
+#' @details Some of these constants are used internally by routines of the \code{nbody} package. In order to modify a constant, use full commands such as \code{nbody::cst$G=1} rather than \code{cst$G=1}, since the latter will not be seen by the routines of the \code{nbody} package.
+#'
+#' @examples
+#' summary(cst)
 #'
 #' @author Danail Obreschkow
 #'
@@ -9,7 +16,9 @@ cst = list(G = 6.67408e-11, # [m^3/kg/s^2] gravitational constant
            Mearth = 5.972e24, # [kg] Earth mass
            AU = 149597870700, # [m] astronomical unit
            yr = 31557600, # [s] Julian astronomical year year
+           year = 31557600, # [s] Julian astronomical year year
            month = 2629743.83333, # [s] month = year/12
+           week = 7*86400, # [s] week
            day = 86400, # [s] day
            hour = 3600, # [s] hour
            min = 60, # [s] minute
@@ -17,4 +26,5 @@ cst = list(G = 6.67408e-11, # [m^3/kg/s^2] gravitational constant
            kpc = 3.0857e19, # [m] kiloparsec
            Mpc = 3.0857e22, # [m] Megaparsec
            Gpc = 3.0857e25, # [m] Gigaparsec
+           lightyear = 9.4605284, # [m] light-year
            ly = 9.4605284) # [m] light-year

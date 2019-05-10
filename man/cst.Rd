@@ -3,13 +3,20 @@
 \docType{data}
 \name{cst}
 \alias{cst}
-\title{Global variables}
-\format{An object of class \code{list} of length 14.}
+\title{Physical constants}
+\format{An object of class \code{list} of length 17.}
 \usage{
 cst
 }
 \description{
-Global variables
+Useful physical constants in SI units.
+}
+\details{
+Some of these constants are used internally by routines of the \code{nbody} package. In order to modify a constant, use full commands such as \code{nbody::cst$G=1} rather than \code{cst$G=1}, since the latter will not be seen by the routines of the \code{nbody} package.
+}
+\examples{
+summary(cst)
+
 }
 \author{
 Danail Obreschkow

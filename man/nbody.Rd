@@ -4,7 +4,10 @@
 \name{nbody}
 \alias{nbody}
 \alias{nbody-package}
-\title{Package Name}
+\title{Gravitational N-body simulator}
 \description{
-Package description.
+Gravitational N-body solver for teaching and entry-level scientific computing.
+}
+\author{
+Danail Obreschkow
 }
