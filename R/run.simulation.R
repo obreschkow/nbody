@@ -162,13 +162,13 @@ run.simulation = function(sim, measure.time = TRUE) {
     dt = min(sim$para$dt.max, sim$para$t.max-t, t.out-t, sim$para$eta*dt.var)
     custom.iteration(dt)
     t = t+dt
-    if (t>=t.out) {
+    n.iterations = n.iterations+1
+    if (t>=t.out & t<sim$para$t.max) {
       i.out = i.out+1
       x.out[i.out,,] = x
       v.out[i.out,,] = v
       t.out = t.out+sim$para$dt.out
     }
-    n.iterations = n.iterations+1
   }
 
   # finalise output

@@ -34,9 +34,9 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
   for (i in seq(3)) x[,,i] = x[,,i]-center[i]
 
   # open empty plot
-  par(pty=pty)
   if (is.null(xlim)) xlim = range(x[,,index1])
   if (is.null(ylim)) ylim = range(x[,,index2])
+  par(pty=pty)
   magplot(NA,xlim=xlim,ylim=ylim,asp=asp,...)
 
   # draw trajectories
