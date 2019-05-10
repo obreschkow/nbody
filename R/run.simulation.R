@@ -112,6 +112,9 @@ run.simulation = function(sim, measure.time = TRUE) {
     x <<- x+.c.yoshida[4]*v*dt
   }
 
+  # fix gravitatinonal constant
+  if (is.null(G)) G = cst$G
+
   # acceleration function
   .evaluate.accelerations = function() {
     if (is.null(sim$para$afield)) {
@@ -120,7 +123,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       a <<- sim$para$afield(x,t)
     }
     if (length(rsmoothsqr)==0) rsmoothsqr = 0
-    f = accelerations(m,x,a,cst$G,rsmoothsqr)
+    f = accelerations(m,x,a,G,rsmoothsqr)
     a[,] <<- f$a
     dt.var <<- f$dtvar
   }
