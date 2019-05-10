@@ -112,9 +112,6 @@ run.simulation = function(sim, measure.time = TRUE) {
     x <<- x+.c.yoshida[4]*v*dt
   }
 
-  # fix gravitatinonal constant
-  if (is.null(sim$para$G)) G = cst$G
-
   # acceleration function
   .evaluate.accelerations = function() {
     if (is.null(sim$para$afield)) {
@@ -123,10 +120,19 @@ run.simulation = function(sim, measure.time = TRUE) {
       a <<- sim$para$afield(x,t)
     }
     if (length(rsmoothsqr)==0) rsmoothsqr = 0
-    f = accelerations(m,x,a,G,rsmoothsqr)
+    f = accelerations(m,x,a,sim$para$G,rsmoothsqr)
     a[,] <<- f$a
     dt.var <<- f$dtvar
   }
+
+
+  # initialize parameters
+  if (is.null(sim$para$G)) sim$para$G = cst$G
+  if (is.null(sim$para$algorithm)) sim$para$algorithm = 'leapfrog'
+  custom.iteration = .iteration[[sim$para$algorithm]]
+  if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
+  rsmoothsqr = sim$para$rsmooth^2
+  if (is.null(sim$para$eta)) sim$para$eta = 0.01
 
   # make global variables from ICs
   m = sim$ics$m
@@ -134,10 +140,6 @@ run.simulation = function(sim, measure.time = TRUE) {
   x = sim$ics$x
   v = sim$ics$v
   a = array(0,c(n,3)) # this line is necessary to make 'a' a local variable
-
-  # set iteration function
-  if (is.null(sim$para$algorithm)) sim$para$algorithm = 'leapfrog'
-  custom.iteration = .iteration[[sim$para$algorithm]]
 
   # initialize output variables
   n.out = floor(sim$para$t.max/sim$para$dt.out)+2
@@ -147,13 +149,6 @@ run.simulation = function(sim, measure.time = TRUE) {
   v.out[1,,] = v
   t.out = sim$para$dt.out # time of next output
 
-  # advanced settings (for future use)
-  if (is.null(sim$para$rsmooth)) {
-    rsmoothsqr = 0
-  } else {
-    rsmoothsqr = sim$para$rsmooth^2 # only used for smoothed particles
-  }
-  if (is.null(sim$para$eta)) sim$para$eta = 0.01
   dt.var = NULL # only used for variable time-stepping
 
   # prepare first iteration
