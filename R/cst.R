@@ -2,7 +2,7 @@
 #'
 #' @description Useful physical constants in SI units.
 #'
-#' @details Some of these constants are used internally by routines of the \code{nbody} package. In order to modify a constant, use full commands such as \code{nbody::cst$G=1} rather than \code{cst$G=1}, since the latter will not be seen by the routines of the \code{nbody} package.
+#' @details Some of these constants are used internally by routines of the \code{nbody} package. Note that even if these constants are modified (e.g. via \code{cst$G=1}), the routines of the \code{nbody} package will still access the original values.
 #'
 #' @examples
 #' summary(cst)
