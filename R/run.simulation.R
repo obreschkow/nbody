@@ -142,7 +142,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   a = array(0,c(n,3)) # this line is necessary to make 'a' a local variable
 
   # initialize output variables
-  n.out = floor(sim$para$t.max/sim$para$dt.out)+2
+  n.out = ceiling(sim$para$t.max/sim$para$dt.out)+2
   x.out = v.out = array(NA,c(n.out,n,3))
   i.out = 1
   x.out[1,,] = x
