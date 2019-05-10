@@ -113,7 +113,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   }
 
   # fix gravitatinonal constant
-  if (is.null(G)) G = cst$G
+  if (is.null(sim$para$G)) G = cst$G
 
   # acceleration function
   .evaluate.accelerations = function() {
