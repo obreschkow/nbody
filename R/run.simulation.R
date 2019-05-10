@@ -143,11 +143,12 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # initialize output variables
   n.out = ceiling(sim$para$t.max/sim$para$dt.out)+2
+  t.out = rep(NA,n.out)
   x.out = v.out = array(NA,c(n.out,n,3))
   i.out = 1
   x.out[1,,] = x
   v.out[1,,] = v
-  t.out = sim$para$dt.out # time of next output
+  t.next = sim$para$dt.out # time of next output
 
   dt.var = NULL # only used for variable time-stepping
 
@@ -158,20 +159,22 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # iterate
   while (t < sim$para$t.max) {
-    dt = min(sim$para$dt.max, sim$para$t.max-t, t.out-t, sim$para$eta*dt.var)
+    dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, sim$para$eta*dt.var)
     custom.iteration(dt)
     t = t+dt
     n.iterations = n.iterations+1
-    if (t>=t.out & t<sim$para$t.max) {
+    if (t>=t.next & t<sim$para$t.max) {
       i.out = i.out+1
+      t.out[i.out] = t
       x.out[i.out,,] = x
       v.out[i.out,,] = v
-      t.out = t.out+sim$para$dt.out
+      t.next = t.next+sim$para$dt.out
     }
   }
 
   # finalise output
   i.out = i.out+1
+  t.out[i.out] = t
   x.out[i.out,,] = x
   v.out[i.out,,] = v
   sim$output = list(t = t.out[1:i.out], x = x.out[1:i.out,,], v = v.out[1:i.out,,],
