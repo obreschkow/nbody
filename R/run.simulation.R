@@ -11,15 +11,15 @@
 #' \code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
 #' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 #'
-#' \code{para} is the sublist of simulation parameters. It contains the items:\cr
-#' \code{t.max} = final simulation time.\cr
-#' \code{dt.xmax} = maximum time step; ignored if set to \code{NULL} (default).\cr
-#' \code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}.\cr
-#' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. The default is 0.01.\cr
-#' \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order, default), 'yoshida' (4th order).\cr
-#' \code{rsmooth} = optional smoothing radius. No smoothing is assumed by default.\cr
-#' \code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. No field is assumes if set to \code{NULL} (default).
-#' \code{G} = alternative gravitational constant. If set to \code{NULL}, the true value specified in \code{\link{cst}} will be used.
+#' \code{para} is the sublist of optional simulation parameters. It contains the items:\cr
+#' \code{t.max} = final simulation time. If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
+#' \code{dt.xmax} = maximum time step. If not given, no maximum time step is imposed, meaning that the maximum time step is either equal to \code{dt.out} or the adaptive time step, whichever is smaller.\cr
+#' \code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}. If not given, \code{dt.max=t.max/100} is assumed.\cr
+#' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
+#' \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
+#' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
+#' \code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.
+#' \code{G} = alternative gravitational constant. If not given, the true value specified in \code{\link{cst}} is used.
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
 #'
@@ -71,18 +71,34 @@ run.simulation = function(sim, measure.time = TRUE) {
 }
 
 # Core simulation routine
-.run.sim = function(sim) {
+.run.sim = function(sim=NULL) {
 
   # check ICs
+  if (is.null(sim)) stop('Mandatory argument "sim" is missing.')
   if (is.null(sim$ics)) stop('The initial conditions sublist "ics" is missing in the input argument sim.')
   if (length(sim$ics)!=3) stop('The sublist ics must contain exactly three items.')
   if (is.null(sim$ics$m)) stop('The item "ics$m" is missing.')
   if (is.null(sim$ics$x)) stop('The item "ics$x" is missing.')
   if (is.null(sim$ics$v)) stop('The item "ics$v" is missing.')
+  if (dim(sim$ics$x)[2]!=3) stop('x must be a matrix with 3 columns.')
+  if (dim(sim$ics$v)[2]!=3) stop('v must be a matrix with 3 columns.')
+  if (dim(sim$ics$x)[1]!=dim(sim$ics$v)[1]) stop('x and v must have the same number of rows.')
+  if (dim(sim$ics$x)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of x.')
+  if (dim(sim$ics$v)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of v.')
 
-  # the parameters
-  if (is.null(sim$para)) stop('The initial conditions sublist "para" is missing in the input argument sim.')
-  if (is.null(sim$para$t.max)) stop('The item "para$t.max" is missing.')
+  # handle optional parameters
+  if (is.null(sim$para)) sim$para = list()
+  if (is.null(sim$para$G)) sim$para$G = cst$G
+  if (is.null(sim$para$t.max)) {
+    M = sum(sim$ics$m)
+    x0 = colSums(sim$ics$x*sim$ics$m)/M # center of mass
+    R = sqrt(sum((sim$ics$x[,1]-x0[1])^2)+sum((sim$ics$x[,2]-x0[2])^2)+sum((sim$ics$x[,3]-x0[3])^2)) # RMS radius
+    sim$para$t.max = 2*pi*sqrt(R^3/M/sim$para$G) # dynamical time scale
+  }
+  if (is.null(sim$para$dt.output)) sim$para$dt.output=sim$para$t.max/100
+  if (is.null(sim$para$eta)) sim$para$eta=0.01
+  if (is.null(sim$para$algorithm)) sim$para$algorithm='leapfrog'
+  if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
 
   # integration algorithms
   .iteration = {}
@@ -125,15 +141,6 @@ run.simulation = function(sim, measure.time = TRUE) {
     dt.var <<- f$dtvar
   }
 
-
-  # initialize parameters
-  if (is.null(sim$para$G)) sim$para$G = cst$G
-  if (is.null(sim$para$algorithm)) sim$para$algorithm = 'leapfrog'
-  custom.iteration = .iteration[[sim$para$algorithm]]
-  if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
-  rsmoothsqr = sim$para$rsmooth^2
-  if (is.null(sim$para$eta)) sim$para$eta = 0.01
-
   # make global variables from ICs
   m = sim$ics$m
   n = length(m)
@@ -150,9 +157,10 @@ run.simulation = function(sim, measure.time = TRUE) {
   v.out[1,,] = v
   t.next = sim$para$dt.out # time of next output
 
-  dt.var = NULL # only used for variable time-stepping
-
   # prepare first iteration
+  dt.var = NULL # only used for variable time-stepping
+  custom.iteration = .iteration[[sim$para$algorithm]]
+  rsmoothsqr = sim$para$rsmooth^2
   t = 0
   n.iterations = 0
   .evaluate.accelerations()

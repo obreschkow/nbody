@@ -14,15 +14,15 @@ run.simulation(sim, measure.time = TRUE)
 \code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
 \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 
-\code{para} is the sublist of simulation parameters. It contains the items:\cr
-\code{t.max} = final simulation time.\cr
-\code{dt.xmax} = maximum time step; ignored if set to \code{NULL} (default).\cr
-\code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}.\cr
-\code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. The default is 0.01.\cr
-\code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order, default), 'yoshida' (4th order).\cr
-\code{rsmooth} = optional smoothing radius. No smoothing is assumed by default.\cr
-\code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. No field is assumes if set to \code{NULL} (default).
-\code{G} = alternative gravitational constant. If set to \code{NULL}, the true value specified in \code{\link{cst}} will be used.}
+\code{para} is the sublist of optional simulation parameters. It contains the items:\cr
+\code{t.max} = final simulation time. If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
+\code{dt.xmax} = maximum time step. If not given, no maximum time step is imposed, meaning that the maximum time step is either equal to \code{dt.out} or the adaptive time step, whichever is smaller.\cr
+\code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}. If not given, \code{dt.max=t.max/100} is assumed.\cr
+\code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
+\code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
+\code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
+\code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.
+\code{G} = alternative gravitational constant. If not given, the true value specified in \code{\link{cst}} is used.}
 
 \item{measure.time}{logical flag that determines whether time computation time will be measured and displayed.}
 }

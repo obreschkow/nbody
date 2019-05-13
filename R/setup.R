@@ -34,7 +34,7 @@ setup.sunearth = function(t.max=cst$yr, dt.out=cst$yr, ...) {
   x = rbind(c(-cst$Mearth/sum(m)*cst$AU,0,0),
             c(cst$Msun/sum(m)*cst$AU,0,0)) # [m] position matrix
   v = rbind(c(0,2*pi*x[1,1]/cst$yr,0),
-            c(0,2*pi*x[1,2]/cst$yr,0)) # [m/s] velocity matrix
+            c(0,2*pi*x[2,1]/cst$yr,0)) # [m/s] velocity matrix
 
   sim = list(ics = list(m=m, x=x, v=v),
              para = list(t.max = cst$yr, dt.out = cst$week, ...))
