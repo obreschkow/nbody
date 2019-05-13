@@ -4,6 +4,7 @@
 #'
 #' @importFrom magicaxis magplot
 #' @importFrom graphics lines par points
+#' @importFrom grDevices col2rgb
 #'
 #' @param x is a simulation-object as produced by \code{run.simulation}
 #' @param y deprecated argument included for consistency with generic \code{\link[graphics]{plot}} function
@@ -18,16 +19,35 @@
 #' @param title title of plot
 #' @param asp aspect ratio of x and y axes
 #' @param pty character specifying the type of plot region to be used; "s" generates a square plotting region and "m" generates the maximal plotting region.
+#' @param col single color or a n-element vector of colors for each particle.
+#' @param alpha.orbits opacity (0...1) of orbital lines.
+#' @param alpha.snapshots opacity (0...1) of snapshot points.
+#' @param lwd line width of orbital lines.
+#' @param show.orbits logical flag. If TRUE (default), the orbits are shown as straight lines between snapshots.
+#' @param show.snapshots logical flag. If TRUE (default), points are shown for each snapshot.
+#' @param show.ics logical flag. If TRUE (default), the initial positions are highlighted.
+#' @param show.fcs logical flag. If TRUE (default), the final positions are highlighted.
 #' @param ... additional parameters for \code{\link[graphics]{plot}}
 #'
 #' @author Danail Obreschkow
 #'
 #' @method plot simulation
 #' @export
-plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NULL, center=c(0,0,0), cex=0.3, pch=20, title='', asp=1, pty='m', ...) {
+plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NULL,
+                           center=c(0,0,0), cex=0.3, pch=20, title='', asp=1, pty='m', col='black',
+                           alpha.orbits=1, alpha.snapshots=1, lwd=1,
+                           show.orbits=TRUE, show.snapshots=TRUE, show.ics=TRUE, show.fcs=TRUE, ...) {
 
   # input check
   if (is.null(x$output)) stop('It seems that this simulation has not yet been run, as its output list is missing.')
+  n = dim(x$output$x)[2] # number of particles
+
+  # handle colors
+  if (length(col)==1) {
+    col = rep(col,n)
+  } else {
+    if (length(col)!=n) stop('col must be a single color or a n-element vector of colors.')
+  }
 
   # produce coordinates
   x = x$output$x/units
@@ -40,15 +60,23 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
   magplot(NA,xlim=xlim,ylim=ylim,asp=asp,...)
 
   # draw trajectories
-  n = dim(x)[1]
-  for (i in seq(dim(x)[2])) {
-    lines(x[,i,index1],x[,i,index2])
-    points(x[,i,index1],x[,i,index2],pch=pch,cex=cex)
-    points(x[1,i,index1],x[1,i,index2],pch=1,cex=1,col='blue')
-    points(x[n,i,index1],x[n,i,index2],pch=20,cex=0.5,col='blue')
+  m = dim(x)[1]
+  for (i in seq(n)) {
+    if (show.orbits) lines(x[,i,index1],x[,i,index2],col=.transparent(col[i],alpha.orbits),lwd=lwd)
+    if (show.snapshots) points(x[,i,index1],x[,i,index2],pch=pch,cex=cex,col=.transparent(col[i],alpha.snapshots))
+    if (show.ics) points(x[1,i,index1],x[1,i,index2],pch=1,cex=cex*3,col=col[i])
+    if (show.fcs) points(x[m,i,index1],x[m,i,index2],pch=4,cex=cex*2.2,col=col[i])
   }
 
   # finalize plot
   title(title,cex.main=0.8,line=0)
 
+}
+
+.transparent = function(col,alpha=0.3) {
+  for (i in seq(length(col))) {
+    rgb = col2rgb(col[i])/255
+    col[i] = rgb(rgb[1],rgb[2],rgb[3],alpha)
+  }
+  return(col)
 }

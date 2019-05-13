@@ -6,7 +6,10 @@
 \usage{
 \method{plot}{simulation}(x, y, units = 1, index1 = 1, index2 = 2,
   xlim = NULL, ylim = NULL, center = c(0, 0, 0), cex = 0.3,
-  pch = 20, title = "", asp = 1, pty = "m", ...)
+  pch = 20, title = "", asp = 1, pty = "m", col = "black",
+  alpha.orbits = 1, alpha.snapshots = 1, lwd = 1,
+  show.orbits = TRUE, show.snapshots = TRUE, show.ics = TRUE,
+  show.fcs = TRUE, ...)
 }
 \arguments{
 \item{x}{is a simulation-object as produced by \code{run.simulation}}
@@ -34,6 +37,22 @@
 \item{asp}{aspect ratio of x and y axes}
 
 \item{pty}{character specifying the type of plot region to be used; "s" generates a square plotting region and "m" generates the maximal plotting region.}
+
+\item{col}{single color or a n-element vector of colors for each particle.}
+
+\item{alpha.orbits}{opacity (0...1) of orbital lines.}
+
+\item{alpha.snapshots}{opacity (0...1) of snapshot points.}
+
+\item{lwd}{line width of orbital lines.}
+
+\item{show.orbits}{logical flag. If TRUE (default), the orbits are shown as straight lines between snapshots.}
+
+\item{show.snapshots}{logical flag. If TRUE (default), points are shown for each snapshot.}
+
+\item{show.ics}{logical flag. If TRUE (default), the initial positions are highlighted.}
+
+\item{show.fcs}{logical flag. If TRUE (default), the final positions are highlighted.}
 
 \item{...}{additional parameters for \code{\link[graphics]{plot}}}
 }
