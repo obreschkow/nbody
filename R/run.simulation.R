@@ -13,7 +13,8 @@
 #'
 #' \code{para} is the sublist of optional simulation parameters. It contains the items:\cr
 #' \code{t.max} = final simulation time. If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
-#' \code{dt.xmax} = maximum time step. If not given, no maximum time step is imposed, meaning that the maximum time step is either equal to \code{dt.out} or the adaptive time step, whichever is smaller.\cr
+#' \code{dt.max} = maximum time step. If not given, no maximum time step is imposed, meaning that the maximum time step is either equal to \code{dt.out} or the adaptive time step, whichever is smaller.\cr
+#' \code{dt.min} = minimum time step used, unless a smaller time step is required to save an output or to land precisely on the final time \code{t.max}.
 #' \code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}. If not given, \code{dt.max=t.max/100} is assumed.\cr
 #' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 #' \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
@@ -92,13 +93,14 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$t.max)) {
     M = sum(sim$ics$m)
     x0 = colSums(sim$ics$x*sim$ics$m)/M # center of mass
-    R = sqrt(sum((sim$ics$x[,1]-x0[1])^2)+sum((sim$ics$x[,2]-x0[2])^2)+sum((sim$ics$x[,3]-x0[3])^2)) # RMS radius
+    R = sqrt(mean((sim$ics$x[,1]-x0[1])^2)+mean((sim$ics$x[,2]-x0[2])^2)+mean((sim$ics$x[,3]-x0[3])^2)) # RMS radius
     sim$para$t.max = 2*pi*sqrt(R^3/M/sim$para$G) # dynamical time scale
   }
-  if (is.null(sim$para$dt.output)) sim$para$dt.output=sim$para$t.max/100
+  if (is.null(sim$para$dt.out)) sim$para$dt.out=sim$para$t.max/100
   if (is.null(sim$para$eta)) sim$para$eta=0.01
   if (is.null(sim$para$algorithm)) sim$para$algorithm='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
+  if (sim$para$t.max/sim$para$dt.out>1e4) stop('dt.out is too small for the simulation time t.max.')
 
   # integration algorithms
   .iteration = {}
@@ -167,7 +169,7 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # iterate
   while (t < sim$para$t.max) {
-    dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, sim$para$eta*dt.var)
+    dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, max(sim$para$dt.min, sim$para$eta*dt.var))
     custom.iteration(dt)
     t = t+dt
     n.iterations = n.iterations+1
