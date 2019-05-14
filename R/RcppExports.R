@@ -5,3 +5,7 @@ accelerations <- function(m, x, a, G, rsmoothsqr) {
     .Call('_nbody_accelerations', PACKAGE = 'nbody', m, x, a, G, rsmoothsqr)
 }
 
+energypot <- function(m, x, v, rsmooth) {
+    .Call('_nbody_energypot', PACKAGE = 'nbody', m, x, v, rsmooth)
+}
+

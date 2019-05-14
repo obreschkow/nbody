@@ -1,15 +1,13 @@
 #' @title Move center of mass to the origin
 #'
-#' @description Move center of mass to the origin and cancel center of mass velocity
-#'
-#' @importFrom Rcpp cppFunction
+#' @description Routine, designed to reset the center of mass (CM) of the initial conditions (ICs) of an N-body simulation. The CM position and velocity are both shifted to (0,0,0).
 #'
 #' @param sim list of m, x, v or list with a sublist "ics", made of m, x, v, where
 #' \code{m} = N-vector with the masses of the N particles\cr
 #' \code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
 #' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 #'
-#' @return Returns a structure of the same format as the input argument, but with recentered positions and velocities.
+#' @return Returns a structure of the same format as the input argument, but with re-centered positions and velocities.
 #'
 #' @author Danail Obreschkow
 #'

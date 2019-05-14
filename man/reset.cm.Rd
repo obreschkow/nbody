@@ -13,10 +13,10 @@ reset.cm(sim)
 \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr}
 }
 \value{
-Returns a structure of the same format as the input argument, but with recentered positions and velocities.
+Returns a structure of the same format as the input argument, but with re-centered positions and velocities.
 }
 \description{
-Move center of mass to the origin and cancel center of mass velocity
+Routine, designed to reset the center of mass (CM) of the initial conditions (ICs) of an N-body simulation. The CM position and velocity are both shifted to (0,0,0).
 }
 \author{
 Danail Obreschkow

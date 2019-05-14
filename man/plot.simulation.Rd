@@ -38,7 +38,7 @@
 
 \item{pty}{character specifying the type of plot region to be used; "s" generates a square plotting region and "m" generates the maximal plotting region.}
 
-\item{col}{single color or a n-element vector of colors for each particle.}
+\item{col}{either (1) a single color, (2) a n-element vector of colors for each particle or (3) a function(n,...) producing n colors, e.g. 'rainbow'}
 
 \item{alpha.orbits}{opacity (0...1) of orbital lines.}
 

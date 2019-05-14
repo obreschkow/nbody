@@ -20,7 +20,7 @@
 #' \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.
-#' \code{G} = alternative gravitational constant. If not given, the true value specified in \code{\link{cst}} is used.
+#' \code{G} = gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
 #'

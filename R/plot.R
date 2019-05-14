@@ -19,7 +19,7 @@
 #' @param title title of plot
 #' @param asp aspect ratio of x and y axes
 #' @param pty character specifying the type of plot region to be used; "s" generates a square plotting region and "m" generates the maximal plotting region.
-#' @param col single color or a n-element vector of colors for each particle.
+#' @param col either (1) a single color, (2) a n-element vector of colors for each particle or (3) a function(n,...) producing n colors, e.g. 'rainbow'
 #' @param alpha.orbits opacity (0...1) of orbital lines.
 #' @param alpha.snapshots opacity (0...1) of snapshot points.
 #' @param lwd line width of orbital lines.
@@ -43,7 +43,9 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
   n = dim(x$output$x)[2] # number of particles
 
   # handle colors
-  if (length(col)==1) {
+  if (is.function(col)) {
+    col = col(n)
+  } else if (length(col)==1) {
     col = rep(col,n)
   } else {
     if (length(col)!=n) stop('col must be a single color or a n-element vector of colors.')
