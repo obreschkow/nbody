@@ -136,7 +136,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (is.null(sim$para$afield)) {
       a[,] <<- 0
     } else {
-      a <<- sim$para$afield(x,t)
+      for (i in seq(n)) a[i,] <<- sim$para$afield(x[i,],t)
     }
     if (length(rsmoothsqr)==0) rsmoothsqr = 0
     f = accelerations(m,x,a,sim$para$G,rsmoothsqr)
