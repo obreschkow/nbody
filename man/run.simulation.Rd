@@ -29,10 +29,11 @@ run.simulation(sim, measure.time = TRUE)
 }
 \value{
 The routine returns the structured list of the input argument, with one sublist \code{output} added. This sublist contains the items:
-\item{t}{k-vector with the simulation times of the k output snapshots.}
+\item{t}{k-vector with the simulation times of the k snapshots.}
 \item{x}{k-by-N-by-3 array giving the 3D coordinates of the N particles in k snapshots.}
 \item{v}{k-by-N-by-3 array giving the 3D velocities of the N particles in k snapshots.}
-\item{n.iterations}{Number of iterations used to run the simulation.}
+\item{n.snapshots}{total number of snapshots.}
+\item{n.iterations}{total number of iterations used to run the simulation.}
 }
 \description{
 Run direct N-body simulations using a common adaptive time step.

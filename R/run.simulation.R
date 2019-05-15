@@ -28,10 +28,11 @@
 #' For a detailed description of the simulation method, please refer to the lecture notes on N-body simulations by Obreschkow (2019).
 #'
 #' @return The routine returns the structured list of the input argument, with one sublist \code{output} added. This sublist contains the items:
-#' \item{t}{k-vector with the simulation times of the k output snapshots.}
+#' \item{t}{k-vector with the simulation times of the k snapshots.}
 #' \item{x}{k-by-N-by-3 array giving the 3D coordinates of the N particles in k snapshots.}
 #' \item{v}{k-by-N-by-3 array giving the 3D velocities of the N particles in k snapshots.}
-#' \item{n.iterations}{Number of iterations used to run the simulation.}
+#' \item{n.snapshots}{total number of snapshots.}
+#' \item{n.iterations}{total number of iterations used to run the simulation.}
 #'
 #' @keywords N-body simulation
 #'
@@ -154,17 +155,22 @@ run.simulation = function(sim, measure.time = TRUE) {
   n.out = ceiling(sim$para$t.max/sim$para$dt.out)+2
   t.out = rep(NA,n.out)
   x.out = v.out = array(NA,c(n.out,n,3))
-  i.out = 1
-  x.out[1,,] = x
-  v.out[1,,] = v
-  t.next = sim$para$dt.out # time of next output
+  i.out = 0
+  .save.snapshot = function() {
+    i.out <<- i.out+1
+    t.out[i.out] <<- t
+    x.out[i.out,,] <<- x
+    v.out[i.out,,] <<- v
+  }
 
-  # prepare first iteration
+  # initialize first iteration
+  t.next = sim$para$dt.out # time of next output
   dt.var = NULL # only used for variable time-stepping
-  custom.iteration = .iteration[[sim$para$algorithm]]
-  rsmoothsqr = sim$para$rsmooth^2
   t = 0
   n.iterations = 0
+  .save.snapshot()
+  custom.iteration = .iteration[[sim$para$algorithm]]
+  rsmoothsqr = sim$para$rsmooth^2
   .evaluate.accelerations()
 
   # iterate
@@ -174,21 +180,15 @@ run.simulation = function(sim, measure.time = TRUE) {
     t = t+dt
     n.iterations = n.iterations+1
     if (t>=t.next & t<sim$para$t.max) {
-      i.out = i.out+1
-      t.out[i.out] = t
-      x.out[i.out,,] = x
-      v.out[i.out,,] = v
+      .save.snapshot()
       t.next = t.next+sim$para$dt.out
     }
   }
 
   # finalise output
-  i.out = i.out+1
-  t.out[i.out] = t
-  x.out[i.out,,] = x
-  v.out[i.out,,] = v
+  .save.snapshot()
   sim$output = list(t = t.out[1:i.out], x = x.out[1:i.out,,], v = v.out[1:i.out,,],
-                    n.iterations = n.iterations)
+                    n.snapshots = i.out, n.iterations = n.iterations)
 
   # turn list into a simulation class
   class(sim) = 'simulation'
