@@ -5,12 +5,14 @@
 #' @name setup
 #' @aliases setup.earth
 #' @aliases setup.halley
+#' @aliases setup.ellipse
 #'
 #' @param t.max final simulation time
 #' @param dt.out time step for simulation output
-#' @param nperiods number of orbital periods to be computed (only for \code{setup.halley}); ignored if \code{t.max} is specified.
-#' @param e eccentricity (only for \code{setup.halley})
-#' @param s semi-major axis (only for \code{setup.halley})
+#' @param nperiods number of orbital periods to be computed; ignored if \code{t.max} is specified.
+#' @param e eccentricity
+#' @param s semi-major axis
+#' @param f mass-ratio
 #' @param ... other simulation parameters used by \code{\link{run.simulation}}
 #'
 #' @examples
@@ -59,9 +61,41 @@ setup.halley = function(t.max=NULL, nperiods=1, dt.out=3*cst$month, e=0.96714, s
   x = rbind(c(0,0,0),c(x.ap,0,0)) # [m] position matrix
   v = rbind(c(0,0,0),c(0,v.ap,0)) # [m/s] velocity matrix
 
+  if (is.null(t.max)) t.max = nperiods*period
+
   sim = list(ics = list(m=m, x=x, v=v),
-             para = list(t.max = nperiods*period, dt.out = dt.out, ...),
+             para = list(t.max = t.max, dt.out = dt.out, ...),
              user = list(period = period, x.peri = x.peri, x.ap = x.ap))
+
+  class(sim) = 'simulation'
+  return(sim)
+}
+
+#' @rdname setup
+#' @return \code{setup.ellipse()} sets up an elliptical Keplerian orbit in natural units
+#' @export
+setup.ellipse = function(t.max=NULL, nperiods=1, e=0.9, s=1, f=0.5, ...) {
+
+  if (nperiods<=0) stop('number of periods must be >0.')
+  if (e<0) stop('eccentricity e must be >=0.')
+  if (e>=1) stop('eccentricity e must be <1.')
+  if (f<=0) stop('mass ratio f must be >0.')
+  if (s<=0) stop('semi-major axis s must be >0.')
+
+  m = c(1/(1+1/f),1/(1+f))
+  mu = prod(m)/sum(m) # reduced mass
+  x.peri = (1-e)*s # perihelion distance; as global variable for later use
+  x.apo = (1+e)*s # aphelion distance
+  v.apo = sqrt((1-e)/(1+e)/s) # aphelion velocity
+  period = 2*pi*s^1.5 # orbital period
+  x = rbind(c(-x.apo*m[2],0,0),c(x.apo*m[1],0,0)) # position matrix
+  v = rbind(c(0,-v.apo*m[2],0),c(0,v.apo*m[1],0)) # velocity matrix
+
+  if (is.null(t.max)) t.max = nperiods*period
+
+  sim = list(ics = list(m=m, x=x, v=v),
+             para = list(t.max = nperiods*period, G = 1, ...),
+             user = list(period = period, x.peri = x.peri, x.apo = x.apo))
 
   class(sim) = 'simulation'
   return(sim)

@@ -4,12 +4,30 @@
 \alias{plot.simulation}
 \title{Visualize an N-body simulation}
 \usage{
-\method{plot}{simulation}(x, y, units = 1, index1 = 1, index2 = 2,
-  xlim = NULL, ylim = NULL, center = c(0, 0, 0), cex = 0.3,
-  pch = 20, title = "", asp = 1, pty = "m", col = "black",
-  alpha.orbits = 1, alpha.snapshots = 1, lwd = 1,
-  show.orbits = TRUE, show.snapshots = TRUE, show.ics = TRUE,
-  show.fcs = TRUE, ...)
+\method{plot}{simulation}(
+  x,
+  y,
+  units = 1,
+  index1 = 1,
+  index2 = 2,
+  xlim = NULL,
+  ylim = NULL,
+  center = c(0, 0, 0),
+  cex = 0.3,
+  pch = 20,
+  title = "",
+  asp = 1,
+  pty = "m",
+  col = "black",
+  alpha.orbits = 1,
+  alpha.snapshots = 1,
+  lwd = 1,
+  show.orbits = TRUE,
+  show.snapshots = TRUE,
+  show.ics = TRUE,
+  show.fcs = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{is a simulation-object as produced by \code{run.simulation}}

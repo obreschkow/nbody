@@ -4,7 +4,9 @@
 \name{cst}
 \alias{cst}
 \title{Physical constants}
-\format{An object of class \code{list} of length 17.}
+\format{
+An object of class \code{list} of length 17.
+}
 \usage{
 cst
 }

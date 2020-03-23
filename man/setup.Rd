@@ -3,16 +3,25 @@
 \name{setup}
 \alias{setup}
 \alias{setup.earth}
-\alias{setup.sunearth}
 \alias{setup.halley}
+\alias{setup.ellipse}
+\alias{setup.sunearth}
 \title{Initialize N-body simulation}
 \usage{
 setup()
 
 setup.sunearth(t.max = cst$yr, dt.out = cst$yr, ...)
 
-setup.halley(t.max = NULL, nperiods = 1, dt.out = 3 * cst$month,
-  e = 0.96714, s = 17.834 * cst$AU, ...)
+setup.halley(
+  t.max = NULL,
+  nperiods = 1,
+  dt.out = 3 * cst$month,
+  e = 0.96714,
+  s = 17.834 * cst$AU,
+  ...
+)
+
+setup.ellipse(t.max = NULL, nperiods = 1, e = 0.9, s = 1, f = 0.5, ...)
 }
 \arguments{
 \item{t.max}{final simulation time}
@@ -21,11 +30,13 @@ setup.halley(t.max = NULL, nperiods = 1, dt.out = 3 * cst$month,
 
 \item{...}{other simulation parameters used by \code{\link{run.simulation}}}
 
-\item{nperiods}{number of orbital periods to be computed (only for \code{setup.halley}); ignored if \code{t.max} is specified.}
+\item{nperiods}{number of orbital periods to be computed; ignored if \code{t.max} is specified.}
 
-\item{e}{eccentricity (only for \code{setup.halley})}
+\item{e}{eccentricity}
 
-\item{s}{semi-major axis (only for \code{setup.halley})}
+\item{s}{semi-major axis}
+
+\item{f}{mass-ratio}
 }
 \value{
 default routine, which is identical to setup.halley()
@@ -33,6 +44,8 @@ default routine, which is identical to setup.halley()
 \code{setup.sunearth()} sets up a simple 2-body simulation of the Earth around the Sun, using only approximate orbital specifications.
 
 \code{setup.halley()} sets up a 2-body simulation of Halley's Commet around the Sun.
+
+\code{setup.ellipse()} sets up an elliptical Keplerian orbit in natural units
 }
 \description{
 Routines to generate the structured lists of initial conditions and simulation parameters required to run an N-body simulation with \code{\link{run.simulation}}.

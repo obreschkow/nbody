@@ -139,7 +139,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       for (i in seq(n)) a[i,] <<- sim$para$afield(x[i,],t)
     }
     if (length(rsmoothsqr)==0) rsmoothsqr = 0
-    f = accelerations(m,x,a,sim$para$G,rsmoothsqr)
+    f = accelerations(m,x,v,a,sim$para$G,rsmoothsqr)
     a[,] <<- f$a
     dt.var <<- f$dtvar
   }
@@ -175,6 +175,7 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # iterate
   while (t < sim$para$t.max) {
+
     dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, max(sim$para$dt.min, sim$para$eta*dt.var))
     custom.iteration(dt)
     t = t+dt

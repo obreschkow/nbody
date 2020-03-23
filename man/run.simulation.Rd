@@ -45,7 +45,7 @@ For a detailed description of the simulation method, please refer to the lecture
 sim = setup.halley()
 sim = run.simulation(sim)
 plot(sim, units=cst$AU, xlim=c(-20,60), ylim=c(-40,40), xlab='[AU]', ylab='[AU]')
-cat(sprintf('This simulation was run with \%d iterations.\\n',sim$output$n.iterations))
+cat(sprintf('This simulation was run with \%d iterations.\n',sim$output$n.iterations))
 
 }
 \author{

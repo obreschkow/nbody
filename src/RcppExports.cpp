@@ -6,17 +6,18 @@
 using namespace Rcpp;
 
 // accelerations
-List accelerations(NumericVector m, NumericMatrix x, NumericMatrix a, double G, double rsmoothsqr);
-RcppExport SEXP _nbody_accelerations(SEXP mSEXP, SEXP xSEXP, SEXP aSEXP, SEXP GSEXP, SEXP rsmoothsqrSEXP) {
+List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMatrix a, double G, double rsmoothsqr);
+RcppExport SEXP _nbody_accelerations(SEXP mSEXP, SEXP xSEXP, SEXP vSEXP, SEXP aSEXP, SEXP GSEXP, SEXP rsmoothsqrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type m(mSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type v(vSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type a(aSEXP);
     Rcpp::traits::input_parameter< double >::type G(GSEXP);
     Rcpp::traits::input_parameter< double >::type rsmoothsqr(rsmoothsqrSEXP);
-    rcpp_result_gen = Rcpp::wrap(accelerations(m, x, a, G, rsmoothsqr));
+    rcpp_result_gen = Rcpp::wrap(accelerations(m, x, v, a, G, rsmoothsqr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -36,7 +37,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_nbody_accelerations", (DL_FUNC) &_nbody_accelerations, 5},
+    {"_nbody_accelerations", (DL_FUNC) &_nbody_accelerations, 6},
     {"_nbody_energypot", (DL_FUNC) &_nbody_energypot, 4},
     {NULL, NULL, 0}
 };
