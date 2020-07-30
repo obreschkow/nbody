@@ -9,9 +9,9 @@ run.simulation(sim, measure.time = TRUE)
 \arguments{
 \item{sim}{structured list of simulation settings, which must contain the following sublists:\cr\cr
 
-\code{ics} is the sublist of initial conditions. It must contain the items: \cr
+\code{ics} is the sublist of initial conditions. It must contain the items. By default, they are all assumed in SI units, but if you can use any other units, as long as you specify the corresponding value of the gravitational constant \code{G} in the \code{para} sublist (see below).\cr
 \code{m} = N-vector with the masses of the N particles\cr
-\code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
+\code{x} = N-by-3 matrix specifying the initial position in Cartesian coordinates\cr
 \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 
 \code{para} is the sublist of optional simulation parameters. It contains the items:\cr
@@ -22,7 +22,7 @@ run.simulation(sim, measure.time = TRUE)
 \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
 \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
-\code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.
+\code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.\cr
 \code{G} = gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.}
 
 \item{measure.time}{logical flag that determines whether time computation time will be measured and displayed.}
