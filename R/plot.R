@@ -75,10 +75,10 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
 
 }
 
-.transparent = function(col,alpha=0.3) {
+.transparent = function(col,alpha=0.5) {
   for (i in seq(length(col))) {
-    rgb = col2rgb(col[i])/255
-    col[i] = rgb(rgb[1],rgb[2],rgb[3],alpha)
+    rgb = col2rgb(col[i],alpha=TRUE)/255
+    col[i] = rgb(rgb[1],rgb[2],rgb[3],rgb[4]*alpha)
   }
   return(col)
 }

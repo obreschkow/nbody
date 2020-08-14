@@ -92,10 +92,14 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para)) sim$para = list()
   if (is.null(sim$para$G)) sim$para$G = cst$G
   if (is.null(sim$para$t.max)) {
-    M = sum(sim$ics$m)
-    x0 = colSums(sim$ics$x*sim$ics$m)/M # center of mass
-    R = sqrt(mean((sim$ics$x[,1]-x0[1])^2)+mean((sim$ics$x[,2]-x0[2])^2)+mean((sim$ics$x[,3]-x0[3])^2)) # RMS radius
-    sim$para$t.max = 2*pi*sqrt(R^3/M/sim$para$G) # dynamical time scale
+    if (sim$para$G==0) {
+      sim$para$t.max = 1
+    } else {
+      M = sum(sim$ics$m)
+      x0 = colSums(sim$ics$x*sim$ics$m)/M # center of mass
+      R = sqrt(mean((sim$ics$x[,1]-x0[1])^2)+mean((sim$ics$x[,2]-x0[2])^2)+mean((sim$ics$x[,3]-x0[3])^2)) # RMS radius
+      sim$para$t.max = 2*pi*sqrt(R^3/M/sim$para$G) # dynamical time scale
+    }
   }
   if (is.null(sim$para$dt.out)) sim$para$dt.out=sim$para$t.max/100
   if (is.null(sim$para$eta)) sim$para$eta=0.01
