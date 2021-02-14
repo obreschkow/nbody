@@ -3,21 +3,19 @@
 \docType{data}
 \name{cst}
 \alias{cst}
-\title{Physical constants}
+\title{Scientific constants}
 \format{
-An object of class \code{list} of length 17.
+An object of class \code{list} of length 20.
 }
 \usage{
 cst
 }
 \description{
-Useful physical constants in SI units.
-}
-\details{
-Some of these constants are used internally by routines of the \code{nbody} package. Note that even if these constants are modified (e.g. via \code{cst$G=1}), the routines of the \code{nbody} package will still access the original values.
+The list \code{cst} contains useful scientific constants in SI units, mainly for astrophysics.
 }
 \examples{
-summary(cst)
+# print all the constants to console
+for (i in seq(length(cst))) cat(sprintf('\%6s = \%.12e\n',names(cst)[i],cst[i]))
 
 }
 \author{
