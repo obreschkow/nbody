@@ -40,7 +40,15 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
 
   # input check
   if (is.null(x$output)) stop('It seems that this simulation has not yet been run, as its output list is missing.')
-  n = dim(x$output$x)[2] # number of particles
+  if (length(dim(x$output$x))==3) {
+    n = dim(x$output$x)[2] # number of particles
+  } else if (length(dim(x$output$x))==2) {
+    n = 1
+    x$output$x = array(x$output$x,c(dim(x$output$x)[1],1,dim(x$output$x)[2]))
+    x$output$v = array(x$output$v,c(dim(x$output$v)[1],1,dim(x$output$v)[2]))
+  } else {
+    stop('unknown data structure')
+  }
 
   # handle colors
   if (is.function(col)) {

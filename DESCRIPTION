@@ -1,7 +1,7 @@
 Package: nbody
 Type: Package
 Title: N-body simulation for R
-Version: 0.8
+Version: 0.9
 Author: Danail Obreschkow
 Maintainer: Danail Obreschkow <danail.obreschkow@icrar.org>
 Description: Package to run direct gravitational N-body simulations and visualize/analyse the outcomes.

@@ -76,17 +76,23 @@ run.simulation = function(sim, measure.time = TRUE) {
 .run.sim = function(sim=NULL) {
 
   # check ICs
-  if (is.null(sim)) stop('Mandatory argument "sim" is missing.')
-  if (is.null(sim$ics)) stop('The initial conditions sublist "ics" is missing in the input argument sim.')
-  if (length(sim$ics)!=3) stop('The sublist ics must contain exactly three items.')
-  if (is.null(sim$ics$m)) stop('The item "ics$m" is missing.')
-  if (is.null(sim$ics$x)) stop('The item "ics$x" is missing.')
-  if (is.null(sim$ics$v)) stop('The item "ics$v" is missing.')
-  if (dim(sim$ics$x)[2]!=3) stop('x must be a matrix with 3 columns.')
-  if (dim(sim$ics$v)[2]!=3) stop('v must be a matrix with 3 columns.')
-  if (dim(sim$ics$x)[1]!=dim(sim$ics$v)[1]) stop('x and v must have the same number of rows.')
-  if (dim(sim$ics$x)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of x.')
-  if (dim(sim$ics$v)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of v.')
+  if (is.null(sim)) stop('Mandatory argument "sim" is missing.\n')
+  if (is.null(sim$ics)) stop('The initial conditions sublist "ics" is missing in the input argument sim.\n')
+  if (length(sim$ics)!=3) stop('The sublist ics must contain exactly three items.\n')
+  if (is.null(sim$ics$m)) stop('The item "ics$m" is missing.\n')
+  if (is.null(sim$ics$x)) stop('The item "ics$x" is missing.\n')
+  if (is.null(sim$ics$v)) stop('The item "ics$v" is missing.\n')
+  if (length(sim$ics$x)!=3*length(sim$ics$m)) stop('Number of elements in x inconsistent with number of elements in m.\n')
+  if (length(sim$ics$v)!=3*length(sim$ics$m)) stop('Number of elements in v inconsistent with number of elements in m.\n')
+  if (length(sim$ics$m)==1) {
+    sim$ics$x = rbind(as.vector(sim$ics$x))
+    sim$ics$v = rbind(as.vector(sim$ics$v))
+  }
+  if (dim(sim$ics$x)[2]!=3) stop('x must be a matrix with 3 columns.\n')
+  if (dim(sim$ics$v)[2]!=3) stop('v must be a matrix with 3 columns.\n')
+  if (dim(sim$ics$x)[1]!=dim(sim$ics$v)[1]) stop('x and v must have the same number of rows.\n')
+  if (dim(sim$ics$x)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of x.\n')
+  if (dim(sim$ics$v)[1]!=length(sim$ics$m)) stop('The length of m must be equal to the number of rows of v.\n')
 
   # handle optional parameters
   if (is.null(sim$para)) sim$para = list()
@@ -105,7 +111,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$eta)) sim$para$eta=0.01
   if (is.null(sim$para$algorithm)) sim$para$algorithm='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
-  if (sim$para$t.max/sim$para$dt.out>1e4) stop('dt.out is too small for the simulation time t.max.')
+  if (sim$para$t.max/sim$para$dt.out>1e4) stop('dt.out is too small for the simulation time t.max.\n')
 
   # integration algorithms
   .iteration = {}
