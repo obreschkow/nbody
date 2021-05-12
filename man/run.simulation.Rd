@@ -22,7 +22,7 @@ run.simulation(sim, measure.time = TRUE)
 \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
 \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
-\code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.\cr
+\code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 \code{G} = gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.}
 
 \item{measure.time}{logical flag that determines whether time computation time will be measured and displayed.}

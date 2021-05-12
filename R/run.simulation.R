@@ -19,7 +19,7 @@
 #' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 #' \code{algorithm} = character string specifying the integrator to be used. Currently implemented algorithms are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default algorithm.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
-#' \code{afield} = a function(x,t) of position \code{x} (3-vector) and time \code{t} (scalar), specifying the external acceleration field. If not given, no external field is assumed.\cr
+#' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
@@ -112,6 +112,11 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$algorithm)) sim$para$algorithm='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
   if (sim$para$t.max/sim$para$dt.out>1e4) stop('dt.out is too small for the simulation time t.max.\n')
+  if (!is.null(sim$para$afield)) {
+    a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
+    if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
+    if (any(dim(a)!=dim(sim$ics$x))) stop('afield is not a correctly vectorized function of (x,t).\n')
+  }
 
   # integration algorithms
   .iteration = {}
@@ -146,7 +151,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (is.null(sim$para$afield)) {
       a[,] <<- 0
     } else {
-      for (i in seq(n)) a[i,] <<- sim$para$afield(x[i,],t)
+      a = sim$para$afield(x,t)
     }
     if (length(rsmoothsqr)==0) rsmoothsqr = 0
     f = accelerations(m,x,v,a,sim$para$G,rsmoothsqr)
@@ -185,7 +190,6 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # iterate
   while (t < sim$para$t.max) {
-
     dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, max(sim$para$dt.min, sim$para$eta*dt.var))
     custom.iteration(dt)
     t = t+dt
