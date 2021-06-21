@@ -9,12 +9,6 @@ Depends:
     R (>= 4.0.0)
 Imports:
     magicaxis,
-    EBImage,
-    cooltools,
-    plotrix,
-    png,
-    rhdf5,
-    snapshot,
     Rcpp (>= 1.0.0)
 LinkingTo: Rcpp
 License: GPL-3

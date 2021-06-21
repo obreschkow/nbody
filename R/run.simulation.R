@@ -82,6 +82,8 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$ics$m)) stop('The item "ics$m" is missing.\n')
   if (is.null(sim$ics$x)) stop('The item "ics$x" is missing.\n')
   if (is.null(sim$ics$v)) stop('The item "ics$v" is missing.\n')
+  sim$ics$x = as.matrix(sim$ics$x)
+  sim$ics$v = as.matrix(sim$ics$v)
   if (length(sim$ics$x)!=3*length(sim$ics$m)) stop('Number of elements in x inconsistent with number of elements in m.\n')
   if (length(sim$ics$v)!=3*length(sim$ics$m)) stop('Number of elements in v inconsistent with number of elements in m.\n')
   if (length(sim$ics$m)==1) {
