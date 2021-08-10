@@ -11,9 +11,11 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
   //double w = 2e99;
 
   // iterate over point-pairs
-  /*for (int i = 0; i<(n-1); i++) {
-    for (int j = i+1; j<n; j++) {
-      if ((m(i)>0)||(m(j)>0)) {
+
+  if (min(m)>0.0) {
+
+    for (int i = 0; i<(n-1); i++) {
+      for (int j = i+1; j<n; j++) {
 
         // compute accelerations
         double dx0 = x(i,0)-x(j,0); // faster than using a vector dx0()
@@ -34,29 +36,31 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
 
       }
     }
-  }*/
 
-  // iterate over point-pairs
-  for (int i = 0; i<n; i++) { // acceleration of particle i
-    if (m(i)>=0) {
-      for (int j = 0; j<n; j++) { // ... due to particle j
-        if (j!=i) {
-          double mj = abs(m(j));
-          if (mj>0) {
+  } else {
 
-            // compute accelerations
-            double dx0 = x(j,0)-x(i,0); // faster than using a vector dx0()
-            double dx1 = x(j,1)-x(i,1);
-            double dx2 = x(j,2)-x(i,2);
-            double dxsqr = fmax(rsmoothsqr,dx0*dx0+dx1*dx1+dx2*dx2);
-            double q = G/pow(dxsqr,1.5);
-            a(i,0) += mj*q*dx0; // faster than using vector operation on a(_,i)
-            a(i,1) += mj*q*dx1;
-            a(i,2) += mj*q*dx2;
+    // iterate over point-pairs
+    for (int i = 0; i<n; i++) { // acceleration of particle i
+      if (m(i)>=0) {
+        for (int j = 0; j<n; j++) { // ... due to particle j
+          if (j!=i) {
+            double mj = abs(m(j));
+            if (mj>0) {
 
-            // partial time step computations
-            mindxsqr(i) = fmin(mindxsqr(i),dxsqr);
+              // compute accelerations
+              double dx0 = x(j,0)-x(i,0); // faster than using a vector dx0()
+              double dx1 = x(j,1)-x(i,1);
+              double dx2 = x(j,2)-x(i,2);
+              double dxsqr = fmax(rsmoothsqr,dx0*dx0+dx1*dx1+dx2*dx2);
+              double q = G/pow(dxsqr,1.5);
+              a(i,0) += mj*q*dx0; // faster than using vector operation on a(_,i)
+              a(i,1) += mj*q*dx1;
+              a(i,2) += mj*q*dx2;
 
+              // partial time step computations
+              mindxsqr(i) = fmin(mindxsqr(i),dxsqr);
+
+            }
           }
         }
       }

@@ -18,7 +18,7 @@
 #' \code{dt.min} = minimum time step used, unless a smaller time step is required to save an output or to land precisely on the final time \code{t.max}.
 #' \code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}. If not given, \code{dt.max=t.max/100} is assumed.\cr
 #' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
-#' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order). If not given, 'leapfrog' is the default integrator.\cr
+#' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.
@@ -122,7 +122,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$eta)) sim$para$eta=0.01
   if (is.null(sim$para$integrator)) sim$para$integrator='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
-  if (sim$para$t.max/sim$para$dt.out>1e4) stop('dt.out is too small for the simulation time t.max.\n')
+  if (sim$para$t.max/sim$para$dt.out>1e5) stop('dt.out is too small for the simulation time t.max.\n')
   if (!is.null(sim$para$afield)) {
     a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
     if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
@@ -323,19 +323,36 @@ run.simulation = function(sim, measure.time = TRUE) {
         v <<- v+a*dt/2
       }
 
-    } else if (sim$para$integrator=='yoshida') {
+    } else if (sim$para$integrator%in%c('yoshida','yoshida4')) {
 
       .w1 = 1/(2-2^(1/3))
       .w0 = -2^(1/3)*.w1
       .c.yoshida = c(.w1/2,(.w0+.w1)/2,(.w0+.w1)/2,.w1/2)
       .d.yoshida = c(.w1,.w0,.w1)
-      .iteration$yoshida = function(dt) {
+      iteration = function(dt) {
         for (i in seq(3)) {
           x <<- x+.c.yoshida[i]*v*dt
           .evaluate.accelerations()
           v <<- v+.d.yoshida[i]*a*dt
         }
         x <<- x+.c.yoshida[4]*v*dt
+      }
+
+    } else if (sim$para$integrator=='yoshida6') {
+
+      .x1 = 1/(2-2^(1/3))
+      .x0 = -2^(1/3)*.x1
+      .y1 = 1/(2-2^(1/5))
+      .y0 = -2^(1/5)*.y1
+      .d.yoshida = c(.x1*.y1,.x0*.y1,.x1*.y1,.x1*.y0,.x0*.y0,.x1*.y0,.x1*.y1,.x0*.y1,.x1*.y1)
+      .c.yoshida = c(.d.yoshida[1]/2,(.d.yoshida[1:8]+.d.yoshida[2:9])/2,.d.yoshida[9]/2)
+      iteration = function(dt) {
+        for (i in seq(9)) {
+          x <<- x+.c.yoshida[i]*v*dt
+          .evaluate.accelerations()
+          v <<- v+.d.yoshida[i]*a*dt
+        }
+        x <<- x+.c.yoshida[10]*v*dt
       }
 
     } else {
