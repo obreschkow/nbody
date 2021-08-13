@@ -12,7 +12,7 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
 
   // iterate over point-pairs
 
-  if (min(m)>0.0) {
+  if (min(m)>0) {
 
     for (int i = 0; i<(n-1); i++) {
       for (int j = i+1; j<n; j++) {
