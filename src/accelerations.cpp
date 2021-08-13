@@ -8,7 +8,6 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
   int n = m.size();
   NumericVector mindxsqr(n);
   for (int i = 0; i<n; i++) mindxsqr(i) = 1e99;
-  //double w = 2e99;
 
   // iterate over point-pairs
 
@@ -68,14 +67,12 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
   }
 
   // finalize adaptive time step
-  //double dtv = pow(w,0.5)/2; // recommended time step considering velocities
   double z = 1e99;
   for (int i = 0; i<n; i++) {
     double asqr = a(i,0)*a(i,0)+a(i,1)*a(i,1)+a(i,2)*a(i,2)+1e-50;
     z = fmin(z,mindxsqr(i)/asqr);
   }
-  double dta = pow(z,0.25); // recommended time step considering accelerations
-  double dtvar = dta;//fmin(1e99*dtv,dta);
+  double dtvar = pow(z,0.25); // recommended time step considering accelerations
 
   // output
   List ret;

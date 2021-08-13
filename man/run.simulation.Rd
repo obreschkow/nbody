@@ -23,11 +23,11 @@ run.simulation(sim, measure.time = TRUE)
 \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
-\code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.
+\code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr\cr
 
 \code{code} is the sublist of optional variables used when calling external simulation codes. It contains the items:\cr
-\code{name} = character string specifying the name of the code, currently available options are "R" (default) and "nbodyx" (a simple, but fast N-body simulator in Fortran).
-\code{file} = character string specifying the path+filename of the external compiled simulation code.
+\code{name} = character string specifying the name of the code, currently available options are "R" (default) and "nbodyx" (a simple, but fast N-body simulator in Fortran).\cr
+\code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
 \code{interface} = character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.}
 
 \item{measure.time}{logical flag that determines whether time computation time will be measured and displayed.}
@@ -41,10 +41,10 @@ The routine returns the structured list of the input argument, with one sublist 
 \item{n.iterations}{total number of iterations used to run the simulation.}
 }
 \description{
-Run direct N-body simulations using a common adaptive time step.
+Run direct N-body simulations using an adaptive block timestep.
 }
 \details{
-UNITS: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
+Units: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
 For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s≈4.74yrs.
 Likewise, units of the gravitational constant \code{G} are given via [unit of G in m^3*kg^(-1)*s^(-2)] = [unit of length in meters] * [unit of velocity in m/s]^2 / [unit of mass in kg]. E.g., for length units of 1AU=1.49598e11m, velocity units of 1km/s=1e3m/s and mass units of 1Msun=1.98847e30kg, a unit of G is
 7.523272e-14 m^3*kg^(-1)*s^(-2). In these units the true value of G is about 887.154.
