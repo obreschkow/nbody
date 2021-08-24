@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // accelerations
 List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMatrix a, double G, double rsmoothsqr);
 RcppExport SEXP _nbody_accelerations(SEXP mSEXP, SEXP xSEXP, SEXP vSEXP, SEXP aSEXP, SEXP GSEXP, SEXP rsmoothsqrSEXP) {

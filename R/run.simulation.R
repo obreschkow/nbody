@@ -4,6 +4,7 @@
 #'
 #' @importFrom Rcpp cppFunction
 #' @importFrom utils read.table write.table
+#' @importFrom stats sd
 #'
 #' @param sim structured list of simulation settings, which must contain the following sublists:\cr\cr
 #'
@@ -12,29 +13,49 @@
 #' \code{x} = N-by-3 matrix specifying the initial position in Cartesian coordinates\cr
 #' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 #'
-#' \code{para} is the sublist of optional simulation parameters. It contains the items:\cr
+#' \code{para} is an optional sublist of optional simulation parameters. It contains the items:\cr
 #' \code{t.max} = final simulation time in simulation units (see details). If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
 #' \code{dt.max} = maximum time step. If not given, no maximum time step is imposed, meaning that the maximum time step is either equal to \code{dt.out} or the adaptive time step, whichever is smaller.\cr
 #' \code{dt.min} = minimum time step used, unless a smaller time step is required to save an output or to land precisely on the final time \code{t.max}.
 #' \code{dt.out} = output time step, i.e. time step between successive snapshots in the \code{output} sublist returned by \code{run.simulation}. If not given, \code{dt.max=t.max/100} is assumed.\cr
-#' \code{eta} = scaling of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
+#' \code{eta} = accuracy parameter of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 #' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr\cr
 #'
-#' \code{code} is the sublist of optional variables used when calling external simulation codes. It contains the items:\cr
-#' \code{name} = character string specifying the name of the code, currently available options are "R" (default) and "nbodyx" (a simple, but fast N-body simulator in Fortran).\cr
+#' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
+#' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget-4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
 #' \code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
-#' \code{interface} = character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.
+#' \code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.
+#' \code{gadget.np} = number of processors used with Gadget-4 (defaults to 1, which is normally best for small direct N-body runs)
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
 #'
 #' @details
-#' Units: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
+#' UNITS: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
 #' For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s≈4.74yrs.
 #' Likewise, units of the gravitational constant \code{G} are given via [unit of G in m^3*kg^(-1)*s^(-2)] = [unit of length in meters] * [unit of velocity in m/s]^2 / [unit of mass in kg]. E.g., for length units of 1AU=1.49598e11m, velocity units of 1km/s=1e3m/s and mass units of 1Msun=1.98847e30kg, a unit of G is
-#' 7.523272e-14 m^3*kg^(-1)*s^(-2). In these units the true value of G is about 887.154.
+#' 7.523272e-14 m^3*kg^(-1)*s^(-2). In these units the true value of G is about 887.154.\cr\cr
+#'
+#' NBODYX simulator:\cr
+#' Can be downloaded from github via\cr
+#' \code{git clone https://github.com/obreschkow/nbodyx}\cr
+#' Details on installing, compiling and running the code are given in the README file.\cr
+#' Note: To run very high-accuracy simulations, such as the Pythagorean three-body problem, you can use 128-byte floating-point numbers by compiling the code as\cr
+#' \code{make kind=16}\cr\cr
+#'
+#' GADGET-4 simulator:\cr
+#' This his a very powerful N-body+SPH simulator used primarily for large astrophysical simulations. Gadget is not particularly suitable for small direct N-body problems, but it can nonetheless be used for such simulations for the sake of comparison, at least if not too much accuracy is needed and if a massively increased computational overhead is acceptable.
+#' Please refer to https://wwwmpa.mpa-garching.mpg.de/gadget4 for details on how to download and compile the code. In order to use Gadget-4 with this R-package, it must be compiled with the following compile-time options (in the file Config.sh):\cr
+#' \code{NTYPES=2}\cr
+#' \code{GADGET2_HEADER}\cr
+#' \code{SELFGRAVITY}\cr
+#' \code{ALLOW_DIRECT_SUMMATION}\cr
+#' \code{HIERARCHICAL_GRAVITY}\cr
+#' \code{DOUBLEPRECISION=1}\cr
+#' \code{ENLARGE_DYNAMIC_RANGE_IN_TIME}\cr
+#' The runtime parameter file (param.txt) is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
 #'
 #' @return The routine returns the structured list of the input argument, with one sublist \code{output} added. This sublist contains the items:
 #' \item{t}{k-vector with the simulation times of the k snapshots.}
@@ -125,6 +146,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$eta)) sim$para$eta=0.01
   if (is.null(sim$para$integrator)) sim$para$integrator='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
+  if (sim$para$rsmooth<0) stop('smoothing radius cannot be negative.')
   if (sim$para$t.max/sim$para$dt.out>1e5) stop('dt.out is too small for the simulation time t.max.\n')
   if (!is.null(sim$para$afield)) {
     a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
@@ -218,7 +240,108 @@ run.simulation = function(sim, measure.time = TRUE) {
                       n.snapshots = n.snapshots, n.iterations = n.iterations,
                       n.acceleration.evaluations = n.acceleration.evaluations)
 
-  } else if (sim$code$name=='nbody6') {
+  }
+
+
+  # GADGET-4 (Cosmological N-body simulator by V. Springel) ****************************************************************
+
+  else if (sim$code$name=='gadget4') {
+
+    # make file names+paths
+    filename.ics = file.path(sim$code$interface,'ics.dat')
+    filename.para = file.path(sim$code$interface,'param.txt')
+    directory.output = file.path(sim$code$interface,'output')
+
+    # write ICs file
+    .gadget_write(sim$ics, filename.ics)
+
+    # write parameter file
+    if (sim$para$rsmooth==0) sim$para$rsmooth = stats::sd(apply(sim$ics$x,2,sd))*1e-5 # default smoothing radius if not provided
+    smoothing = sim$para$rsmooth/2.8 # => the particles will behave exactly as point masses at separations larger than rsmooth
+    ErrTolIntAccuracy = sim$para$eta/sim$para$rsmooth*1e-3 # => gives comparable accuracy to in-built simulator for Leapfrog integrator
+    para = {}
+    i = 0;
+    i=i+1; para[i] = sprintf('InitCondFile                                      %s',filename.ics)
+    i=i+1; para[i] = sprintf('OutputDir                                         %s',directory.output)
+    i=i+1; para[i] = sprintf('SnapshotFileBase                                  snapshot')
+    i=i+1; para[i] = sprintf('OutputListFilename                                empty.txt')
+    i=i+1; para[i] = sprintf('ICFormat                                          1')
+    i=i+1; para[i] = sprintf('SnapFormat                                        1')
+    i=i+1; para[i] = sprintf('TimeLimitCPU                                      86400')
+    i=i+1; para[i] = sprintf('CpuTimeBetRestartFile                             86400')
+    i=i+1; para[i] = sprintf('MaxMemSize                                        2000')
+    i=i+1; para[i] = sprintf('TimeBegin                                         0')
+    i=i+1; para[i] = sprintf('TimeMax                                           %.12e',sim$para$t.max)
+    i=i+1; para[i] = sprintf('ComovingIntegrationOn                             0')
+    i=i+1; para[i] = sprintf('Omega0                                            0')
+    i=i+1; para[i] = sprintf('OmegaLambda                                       0')
+    i=i+1; para[i] = sprintf('OmegaBaryon                                       0')
+    i=i+1; para[i] = sprintf('HubbleParam                                       1')
+    i=i+1; para[i] = sprintf('Hubble                                            0')
+    i=i+1; para[i] = sprintf('BoxSize                                           0')
+    i=i+1; para[i] = sprintf('OutputListOn                                      0')
+    i=i+1; para[i] = sprintf('TimeBetSnapshot                                   %.12e',sim$para$dt.out)
+    i=i+1; para[i] = sprintf('TimeOfFirstSnapshot                               0')
+    i=i+1; para[i] = sprintf('TimeBetStatistics                                 %.12e',sim$para$dt.out)
+    i=i+1; para[i] = sprintf('NumFilesPerSnapshot                               1')
+    i=i+1; para[i] = sprintf('MaxFilesWithConcurrentIO                          1')
+    i=i+1; para[i] = sprintf('ErrTolIntAccuracy                                 %.12e',ErrTolIntAccuracy)
+    i=i+1; para[i] = sprintf('CourantFac                                        0') # only used for SPH
+    i=i+1; para[i] = sprintf('MaxSizeTimestep                                   %.12e',min(sim$para$dt.out,sim$para$dt.max))
+    i=i+1; para[i] = sprintf('MinSizeTimestep                                   %.12e',0)
+    i=i+1; para[i] = sprintf('TypeOfOpeningCriterion                            1')
+    i=i+1; para[i] = sprintf('ErrTolTheta                                       0') # only used for tree scheeme
+    i=i+1; para[i] = sprintf('ErrTolThetaMax                                    0') # only used for tree scheeme
+    i=i+1; para[i] = sprintf('ErrTolForceAcc                                    0') # only used for tree scheeme
+    i=i+1; para[i] = sprintf('TopNodeFactor                                     2.5')
+    i=i+1; para[i] = sprintf('ActivePartFracForNewDomainDecomp                  0.01')
+    i=i+1; para[i] = sprintf('DesNumNgb                                         64')
+    i=i+1; para[i] = sprintf('MaxNumNgbDeviation                                1')
+    i=i+1; para[i] = sprintf('UnitLength_in_cm                                  1')
+    i=i+1; para[i] = sprintf('UnitMass_in_g                                     1')
+    i=i+1; para[i] = sprintf('UnitVelocity_in_cm_per_s                          1')
+    i=i+1; para[i] = sprintf('GravityConstantInternal                           1')
+    i=i+1; para[i] = sprintf('SofteningComovingClass0                           %.12e',smoothing)
+    i=i+1; para[i] = sprintf('SofteningMaxPhysClass0                            %.12e',smoothing)
+    i=i+1; para[i] = sprintf('SofteningClassOfPartType0                         0')
+    i=i+1; para[i] = sprintf('SofteningComovingClass1                           %.12e',smoothing)
+    i=i+1; para[i] = sprintf('SofteningMaxPhysClass1                            %.12e',smoothing)
+    i=i+1; para[i] = sprintf('SofteningClassOfPartType1                         0')
+    i=i+1; para[i] = sprintf('ArtBulkViscConst                                  1')
+    i=i+1; para[i] = sprintf('MinEgySpec                                        0')
+    i=i+1; para[i] = sprintf('InitGasTemp                                       0')
+    write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
+
+    # run code
+    if (is.null(sim$code$gadget.np)) sim$code$gadget.np = 1
+    if (sim$code$gadget.np<1) stop('gadget.np must be a positive integer.')
+    cmd = sprintf('mpirun -np %d %s %s', sim$code$gadget.np, sim$code$file, filename.para)
+    system(cmd,intern=F)
+
+    # load data
+    n.snapshots = 0
+    while(file.exists(sprintf('%s/snapshot_%03d',directory.output,n.snapshots))) n.snapshots=n.snapshots+1
+    if (n.snapshots<2) stop('not enough GADGET-4 snapshots found')
+    t.out = seq(0,by=sim$para$dt.out,length=n.snapshots)
+    x.out = v.out = array(NA,c(n.snapshots,n,3))
+    for (i in seq(n.snapshots)) {
+      fn = sprintf('%s/snapshot_%03d',directory.output,i-1)
+      dat = .gadget_read(fn)
+      x.out[i,,] = dat$x
+      v.out[i,,] = dat$v
+    }
+
+    # complete output
+    sim$output = list(t = t.out, x = x.out, v = v.out,
+                      n.snapshots = n.snapshots, n.iterations = NA,
+                      n.acceleration.evaluations = NA)
+
+  }
+
+
+  # NBODY-6 ****************************************************************
+
+  else if (sim$code$name=='nbody6') {
 
       stop('nbody6 interface not yet available')
 
@@ -307,7 +430,12 @@ run.simulation = function(sim, measure.time = TRUE) {
       stop()
       system(sprintf('cd %s; %s <input> output',sim$code$interface, sim$code$file),intern=F)
 
-  } else if (sim$code$name=='R') {
+  }
+
+
+  # In-built simulator with C++ acceleration ************************************************************************
+
+  else if (sim$code$name=='R') {
 
     if (sim$para$integrator=='euler') {
 
@@ -427,4 +555,96 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   return(sim)
 
+}
+
+.gadget_write = function (ics, file, tinitial=0) {
+
+  n = length(ics$m)
+
+  data = file(file, "wb")
+
+  # write header
+  writeBin(as.integer(256), data, size = 4)
+  writeBin(as.integer(c(0,n,0,0,0,0)), data, size = 4)
+  writeBin(rep(0,6), data, size = 8)
+  writeBin(as.numeric(tinitial), data, size = 8)
+  writeBin(as.numeric(0), data, size = 8)
+  writeBin(as.integer(rep(0,10)), data, size = 4)
+  writeBin(as.numeric(rep(0,4)), data, size = 8)
+  writeBin(as.integer(rep(0, 24)), data, size = 4)
+  writeBin(as.integer(256), data, size = 4)
+
+  # write positions
+  writeBin(as.integer(n * 3 * 4), data, size = 4)
+  writeBin(as.numeric(t(ics$x)), data, size = 4)
+  writeBin(as.integer(n * 3 * 4), data, size = 4)
+
+  # write velocities
+  writeBin(as.integer(n * 3 * 4), data, size = 4)
+  writeBin(as.numeric(t(ics$v)), data, size = 4)
+  writeBin(as.integer(n * 3 * 4), data, size = 4)
+
+  # write IDs
+  writeBin(as.integer(n * 4), data, size = 4)
+  writeBin(as.integer(seq(n)), data, size = 4)
+  writeBin(as.integer(n * 4), data, size = 4)
+
+  # write masses
+  writeBin(as.integer(n * 4), data, size = 4)
+  writeBin(as.numeric(ics$m), data, size = 4)
+  writeBin(as.integer(n * 4), data, size = 4)
+
+  close(data)
+}
+
+.gadget_read = function (file) {
+
+  data = file(file, "rb")
+
+  # read header
+  block.start = readBin(data, "integer", n = 1, size=4)
+  readBin(data, "integer", n = 1, size=4)
+  n = readBin(data, "integer", n = 1, size=4)
+  readBin(data, "integer", n = 62, size=4)
+  block.end = readBin(data, "integer", n = 1, size=4)
+  if (block.start!=block.end) {
+    close(data)
+    stop(paste0('incorrect block in file',file))
+  }
+
+  # read positions
+  block.start = readBin(data, "integer", n = 1, size=4)
+  x = t(array(readBin(data, "numeric", n = 3*n, size=4),c(3,n)))
+  block.end = readBin(data, "integer", n = 1, size=4)
+  if (block.start!=block.end) {
+    close(data)
+    stop(paste0('incorrect block in file',file))
+  }
+
+  # read velocities
+  block.start = readBin(data, "integer", n = 1, size=4)
+  v = t(array(readBin(data, "numeric", n = 3*n, size=4),c(3,n)))
+  block.end = readBin(data, "integer", n = 1, size=4)
+  if (block.start!=block.end) {
+    close(data)
+    stop(paste0('incorrect block in file',file))
+  }
+
+  # read IDs
+  block.start = readBin(data, "integer", n = 1, size=4)
+  id = readBin(data, "integer", n = n, size=4)
+  block.end = readBin(data, "integer", n = 1, size=4)
+  if (block.start!=block.end) {
+    close(data)
+    stop(paste0('incorrect block in file',file))
+  }
+
+  close(data)
+
+  # sort particles by increasing id
+  i = sort.int(id, index.return = T)$ix
+  x = x[i,]
+  v = v[i,]
+
+  return(list(x=x, v=v))
 }

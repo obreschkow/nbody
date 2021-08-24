@@ -3,16 +3,23 @@
 #' @description Routines to generate the structured lists of initial conditions and simulation parameters required to run an N-body simulation with \code{\link{run.simulation}}.
 #'
 #' @name setup
-#' @aliases setup.earth
 #' @aliases setup.halley
+#' @aliases setup.earth
 #' @aliases setup.ellipse
+#' @aliases setup.3body.periodic
+#' @asiases setup.pythagoras
 #'
 #' @param t.max final simulation time
 #' @param dt.out time step for simulation output
 #' @param nperiods number of orbital periods to be computed; ignored if \code{t.max} is specified.
-#' @param e eccentricity
-#' @param s semi-major axis
-#' @param f mass-ratio
+#' @param e eccentricity in setup.ellipse()
+#' @param s semi-major axis in setup.ellipse()
+#' @param f mass-ratio in setup.ellipse()
+#' @param v1 first velocity parameter in setup.3body.periodic()
+#' @param v2 second velocity parameter in setup.3body.periodic()
+#' @param m3 mass of third body in setup.3body.periodic()
+#' @param integrator integrator used for N-body simulation, see \code{\link{run.simulation}} for details.
+#' @param eta accuracy parameter of adaptive time step, see \code{\link{run.simulation}} for details.
 #' @param ... other simulation parameters used by \code{\link{run.simulation}}
 #'
 #' @examples
@@ -23,28 +30,9 @@
 #' @author Danail Obreschkow
 #'
 #' @rdname setup
-#' @return default routine, which is identical to setup.halley()
+#' @return Calling \code{setup()} is identical to calling setup.halley()
 #' @export
-setup <- function() setup.halley()
-
-#' @rdname setup
-#' @return \code{setup.sunearth()} sets up a simple 2-body simulation of the Earth around the Sun, using only approximate orbital specifications.
-#' @export
-setup.sunearth = function(t.max=cst$yr, dt.out=cst$yr, ...) {
-
-  m = c(cst$Msun,cst$Mearth) # [m] masses of the sun and earth
-  x = rbind(c(-cst$Mearth/sum(m)*cst$AU,0,0),
-            c(cst$Msun/sum(m)*cst$AU,0,0)) # [m] position matrix
-  v = rbind(c(0,2*pi*x[1,1]/cst$yr,0),
-            c(0,2*pi*x[2,1]/cst$yr,0)) # [m/s] velocity matrix
-
-  sim = list(ics = list(m=m, x=x, v=v),
-             para = list(t.max = cst$yr, dt.out = cst$week, ...))
-
-  class(sim) = 'simulation'
-  return(sim)
-
-}
+setup = function() setup.halley()
 
 #' @rdname setup
 #' @return \code{setup.halley()} sets up a 2-body simulation of Halley's Commet around the Sun.
@@ -69,6 +57,25 @@ setup.halley = function(t.max=NULL, nperiods=1, dt.out=3*cst$month, e=0.96714, s
 
   class(sim) = 'simulation'
   return(sim)
+}
+
+#' @rdname setup
+#' @return \code{setup.sunearth()} sets up a simple 2-body simulation of the Earth around the Sun, using only approximate orbital specifications.
+#' @export
+setup.sunearth = function(t.max=cst$yr, dt.out=cst$yr, ...) {
+
+  m = c(cst$Msun,cst$Mearth) # [m] masses of the sun and earth
+  x = rbind(c(-cst$Mearth/sum(m)*cst$AU,0,0),
+            c(cst$Msun/sum(m)*cst$AU,0,0)) # [m] position matrix
+  v = rbind(c(0,2*pi*x[1,1]/cst$yr,0),
+            c(0,2*pi*x[2,1]/cst$yr,0)) # [m/s] velocity matrix
+
+  sim = list(ics = list(m=m, x=x, v=v),
+             para = list(t.max = cst$yr, dt.out = cst$week, ...))
+
+  class(sim) = 'simulation'
+  return(sim)
+
 }
 
 #' @rdname setup
@@ -99,4 +106,26 @@ setup.ellipse = function(t.max=NULL, nperiods=1, e=0.9, s=1, f=0.5, ...) {
 
   class(sim) = 'simulation'
   return(sim)
+}
+
+#' @rdname setup
+#' @return \code{setup.periodic.3body()} can be used to set up a planar zero angular momentum stable 3-body problem with two unit masses and a third mass m3 (maybe equal of different from unity). Such situations can be parameterized with two parameters v1 and v2, following [https://arxiv.org/abs/1709.04775](https://arxiv.org/abs/1709.04775) and [https://arxiv.org/abs/1705.00527](https://arxiv.org/abs/1705.00527).\cr
+#' The default is the famous figure-of-eight, but try, for example, setup.3body.periodic(0.2034916865234370, 0.5181128588867190, 32.850, dt.out=0.02), setup.3body.periodic(0.2009656237, 0.2431076328, 19.0134164290, 0.5, dt.out=0.01) or setup.3body.periodic(0.991198122, 0.711947212, 17.650780784, 4, eta=0.005, dt.out=0.002).\cr\cr
+#' @export
+setup.periodic.3body = function(v1=0.3471128135672417, v2=0.532726851767674, t.max=6.3250, m3=1, ...){
+  m = c(1,1,m3)
+  x = rbind(c(1,0,0),c(-1,0,0),c(0,0,0))
+  v = rbind(c(v1,v2,0),c(v1,v2,0),c(-2*v1/m3,-2*v2/m3,0))
+  return(list(ics = list(m=m,x=x,v=v), para=list(G=1, t.max=t.max, ...)))
+}
+
+#' @rdname setup
+#' @return \code{setup.pythagoras()} sets up the Pythagorean three-body problem consisting of three unit masses placed at the vertices of a right triangle with side lengths 3, 4 and 5. The masses are initially at rest and the gravitational constant is unity.
+#' @export
+setup.pythagoras = function(t.max=68, integrator='yoshida6', eta=0.002, ...) {
+  ics = list(m = c(3,4,5),
+             x = rbind(c(1,3,0),c(-2,-1,0),c(1,-1,0)),
+             v = rbind(c(0,0,0),c(0,0,0),c(0,0,0)))
+  para = list(t.max=t.max, G=1, integrator=integrator, dt.out=0.01,eta=0.002) # to get a fully stable result need to compile nbodyx with kind=16
+  return(list(ics = ics, para=para))
 }
