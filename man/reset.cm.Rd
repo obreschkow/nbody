@@ -8,7 +8,7 @@ reset.cm(sim)
 }
 \arguments{
 \item{sim}{list of m, x, v or list with a sublist "ics", made of m, x, v, where
-\code{m} = N-vector with the masses of the N particles\cr
+\code{m} = N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.\cr
 \code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
 \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr}
 }

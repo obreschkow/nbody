@@ -3,7 +3,7 @@
 #' @description Routine, designed to reset the center of mass (CM) of the initial conditions (ICs) of an N-body simulation. The CM position and velocity are both shifted to (0,0,0).
 #'
 #' @param sim list of m, x, v or list with a sublist "ics", made of m, x, v, where
-#' \code{m} = N-vector with the masses of the N particles\cr
+#' \code{m} = N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.\cr
 #' \code{x} = N-by-3 matrix specifying the initial position in cartesian coordinates\cr
 #' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 #'
@@ -23,7 +23,7 @@ reset.cm = function(sim) {
     if (dim(x)[1]!=length(m)) stop('The length of m must be equal to the number of rows of x.')
     if (dim(v)[1]!=length(m)) stop('The length of m must be equal to the number of rows of v.')
 
-    M = sum(m)
+    M = sum(abs(m))
     if (M<=0) stop('Total mass must be positive.')
 
     x0 = colSums(x*m)/M # center of mass position

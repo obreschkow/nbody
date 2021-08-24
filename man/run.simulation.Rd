@@ -10,7 +10,7 @@ run.simulation(sim, measure.time = TRUE)
 \item{sim}{structured list of simulation settings, which must contain the following sublists:\cr\cr
 
 \code{ics} is the sublist of initial conditions. It must contain the items:\cr
-\code{m} = N-vector with the masses of the N particles\cr
+\code{m} = N-vector with the masses of the N particles. Negative mass values are considered as positive masses belonging to a background field, which is not subject to any forces. Therefore particles with negative mass will have a normal effect on particles with positive masses, but they will not, themselves, be accelerated by any other particle.\cr
 \code{x} = N-by-3 matrix specifying the initial position in Cartesian coordinates\cr
 \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 

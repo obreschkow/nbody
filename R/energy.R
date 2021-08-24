@@ -2,8 +2,8 @@
 #'
 #' @description Computes the instantaneous potential and kinetic energies of all particles in an N-body system. Here, the potential energy of a particle i means the potential energy it has with all other particles (sum_j -G*m[i]*[j]/rij). Hence the total potential energy of the system is half the sum of the individual potential energies.
 #'
-#' @param m N-vector with the masses of the N particles
-#' @param x N-by-3 matrix specifying the initial position in cartesian coordinates
+#' @param m N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.
+#' @param x N-by-3 matrix specifying the initial position in Cartesian coordinates
 #' @param v N-by-3 matrix specifying the initial velocities
 #' @param G gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.
 #' @param rsmooth top-hat smoothing radius.
@@ -16,6 +16,8 @@
 #' @export
 
 energy = function(m,x,v,rsmooth=0,G=NULL,cpp=TRUE) {
+
+  m = abs(m) # to make sure that fixed masses
 
   if (dim(x)[2]!=3) stop('x must be a matrix with 3 columns.')
   if (dim(v)[2]!=3) stop('v must be a matrix with 3 columns.')
