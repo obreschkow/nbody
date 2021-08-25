@@ -1,13 +1,15 @@
 #include <Rcpp.h>
+#include <cmath>
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMatrix a, double G, double rsmoothsqr) {
+List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMatrix a, double G, double rsmoothsqr, double L) {
 
   // initialize variables
   int n = m.size();
   NumericVector mindxsqr(n);
   for (int i = 0; i<n; i++) mindxsqr(i) = 1e99;
+  double h = L/2.0;
 
   // iterate over point-pairs
 
@@ -20,6 +22,11 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
         double dx0 = x(i,0)-x(j,0); // faster than using a vector dx0()
         double dx1 = x(i,1)-x(j,1);
         double dx2 = x(i,2)-x(j,2);
+        if (L>0.0) {
+          dx0 = std::fmod(dx0+h+L,L)-h;
+          dx1 = std::fmod(dx1+h+L,L)-h;
+          dx2 = std::fmod(dx2+h+L,L)-h;
+        }
         double dxsqr = fmax(rsmoothsqr,dx0*dx0+dx1*dx1+dx2*dx2);
         double q = G/pow(dxsqr,1.5);
         a(i,0) -= m[j]*q*dx0; // faster than using vector operation on a(_,i)
@@ -50,6 +57,11 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
               double dx0 = x(j,0)-x(i,0); // faster than using a vector dx0()
               double dx1 = x(j,1)-x(i,1);
               double dx2 = x(j,2)-x(i,2);
+              if (L>0.0) {
+                dx0 = std::fmod(dx0+h+L,L)-h;
+                dx1 = std::fmod(dx1+h+L,L)-h;
+                dx2 = std::fmod(dx2+h+L,L)-h;
+              }
               double dxsqr = fmax(rsmoothsqr,dx0*dx0+dx1*dx1+dx2*dx2);
               double q = G/pow(dxsqr,1.5);
               a(i,0) += mj*q*dx0; // faster than using vector operation on a(_,i)

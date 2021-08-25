@@ -23,7 +23,8 @@ run.simulation(sim, measure.time = TRUE)
 \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
-\code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr\cr
+\code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr
+\code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries.
 
 \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget-4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
@@ -67,7 +68,12 @@ Please refer to https://wwwmpa.mpa-garching.mpg.de/gadget4 for details on how to
 \code{HIERARCHICAL_GRAVITY}\cr
 \code{DOUBLEPRECISION=1}\cr
 \code{ENLARGE_DYNAMIC_RANGE_IN_TIME}\cr
-The runtime parameter file (param.txt) is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
+If and only if periodic boundary conditions are used, you also need to add the option\cr
+\code{PERIODIC}\cr
+If you plan to often switch between runs with open and periodic boundaries, it may be advisable to compile two versions of Gadget-4, with and without this option. To do so, one needs to create two sub-directories with the respective Config.sh files and compile them via\cr
+\code{make -j [number of cores] DIR=[path containing Config.sh with PERIODIC]}\cr
+\code{make -j [number of cores] DIR=[path containing Config.sh without PERIODIC]}\cr
+The runtime parameter file (param.txt) needed by Gadget-4 is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
 }
 \examples{
 sim = setup.halley()

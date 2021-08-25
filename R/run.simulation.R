@@ -22,7 +22,8 @@
 #' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
-#' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr\cr
+#' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr
+#' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries.
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 #' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget-4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
@@ -55,7 +56,12 @@
 #' \code{HIERARCHICAL_GRAVITY}\cr
 #' \code{DOUBLEPRECISION=1}\cr
 #' \code{ENLARGE_DYNAMIC_RANGE_IN_TIME}\cr
-#' The runtime parameter file (param.txt) is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
+#' If and only if periodic boundary conditions are used, you also need to add the option\cr
+#' \code{PERIODIC}\cr
+#' If you plan to often switch between runs with open and periodic boundaries, it may be advisable to compile two versions of Gadget-4, with and without this option. To do so, one needs to create two sub-directories with the respective Config.sh files and compile them via\cr
+#' \code{make -j [number of cores] DIR=[path containing Config.sh with PERIODIC]}\cr
+#' \code{make -j [number of cores] DIR=[path containing Config.sh without PERIODIC]}\cr
+#' The runtime parameter file (param.txt) needed by Gadget-4 is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
 #'
 #' @return The routine returns the structured list of the input argument, with one sublist \code{output} added. This sublist contains the items:
 #' \item{t}{k-vector with the simulation times of the k snapshots.}
@@ -130,6 +136,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   # handle optional parameters
   if (is.null(sim$para)) sim$para = list()
   if (is.null(sim$para$G)) sim$para$G = cst$G
+  if (is.null(sim$para$box.size)) sim$para$box.size = 0
   if (is.null(sim$para$t.max)) {
     if (sim$para$G==0) {
       sim$para$t.max = 1
@@ -209,7 +216,8 @@ run.simulation = function(sim, measure.time = TRUE) {
     para[9] = sprintf('G %.15e',sim$para$G)
     para[10] = sprintf('smoothing_radius %.15e',sim$para$rsmooth)
     para[11] = sprintf('eta %.15e',sim$para$eta)
-    para[12] = sprintf('integrator %s',sim$para$integrator)
+    para[12] = sprintf('box_size %.15e',sim$para$box.size)
+    para[13] = sprintf('integrator %s',sim$para$integrator)
     write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
 
     # run simulation
@@ -278,7 +286,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     i=i+1; para[i] = sprintf('OmegaBaryon                                       0')
     i=i+1; para[i] = sprintf('HubbleParam                                       1')
     i=i+1; para[i] = sprintf('Hubble                                            0')
-    i=i+1; para[i] = sprintf('BoxSize                                           0')
+    i=i+1; para[i] = sprintf('BoxSize                                           %.12e',sim$para$box.size)
     i=i+1; para[i] = sprintf('OutputListOn                                      0')
     i=i+1; para[i] = sprintf('TimeBetSnapshot                                   %.12e',sim$para$dt.out)
     i=i+1; para[i] = sprintf('TimeOfFirstSnapshot                               0')
@@ -338,7 +346,6 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   }
 
-
   # NBODY-6 ****************************************************************
 
   else if (sim$code$name=='nbody6') {
@@ -374,7 +381,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       ETAR = 0.02 # Time-step parameter for regular force polynomial.
       RS0 = 0.0 # Initial radius of neighbour sphere (N-body units).
       DTADJ = 0.5 # Time interval for parameter adjustment (N-body units).
-      DELTAT = 0.02 # ? Output time interval (N-body units).
+      DELTAT = 0.2 # ? Output time interval (N-body units).
       TCRIT = 1.0 # ? Termination time (N-body units).
       QE = 1e-3 # Energy tolerance (restart if DE/E > 5*QE & KZ(2) > 1).
       RBAR = 0.0 # Virial cluster radius in pc (set = 1 for isolated cluster).
@@ -427,8 +434,9 @@ run.simulation = function(sim, measure.time = TRUE) {
 
       # run simulation
       print(sprintf('cd %s; %s <input> output',sim$code$interface, sim$code$file))
-      stop()
+
       system(sprintf('cd %s; %s <input> output',sim$code$interface, sim$code$file),intern=F)
+      stop()
 
   }
 
@@ -500,7 +508,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       } else {
         a = sim$para$afield(x,t)
       }
-      f = accelerations(m,x,v,a,sim$para$G,rsmoothsqr)
+      f = accelerations(m,x,v,a,sim$para$G,rsmoothsqr,sim$para$box.size)
       a[,] <<- f$a
       dt.var <<- f$dtvar
     }
@@ -533,6 +541,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, max(sim$para$dt.min, sim$para$eta*dt.var))
       iteration(dt)
       t = t+dt
+      if (sim$para$box.size>0) x = x%%sim$para$box.size
       n.iterations = n.iterations+1
       if (t>=t.next | t>=sim$para$t.max) {
         .save.snapshot()
