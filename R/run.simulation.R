@@ -23,13 +23,13 @@
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr
-#' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries.
+#' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
-#' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget-4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
+#' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
 #' \code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
 #' \code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.
-#' \code{gadget.np} = number of processors used with Gadget-4 (defaults to 1, which is normally best for small direct N-body runs)
+#' \code{gadget.np} = number of processors used with GADGET-4 (defaults to 1, which is normally best for small direct N-body runs)
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
 #'
@@ -47,8 +47,8 @@
 #' \code{make kind=16}\cr\cr
 #'
 #' GADGET-4 simulator:\cr
-#' This his a very powerful N-body+SPH simulator used primarily for large astrophysical simulations. Gadget is not particularly suitable for small direct N-body problems, but it can nonetheless be used for such simulations for the sake of comparison, at least if not too much accuracy is needed and if a massively increased computational overhead is acceptable.
-#' Please refer to https://wwwmpa.mpa-garching.mpg.de/gadget4 for details on how to download and compile the code. In order to use Gadget-4 with this R-package, it must be compiled with the following compile-time options (in the file Config.sh):\cr
+#' This his a very powerful N-body+SPH simulator used primarily for large astrophysical simulations. GADGET-4 is not particularly suitable for small direct N-body problems, but it can nonetheless be used for such simulations for the sake of comparison, at least if not too much accuracy is needed and if a massively increased computational overhead is acceptable.
+#' Please refer to https://wwwmpa.mpa-garching.mpg.de/gadget4 for details on how to download and compile the code. In order to use GADGET-4 with this R-package, it must be compiled with the following compile-time options (in the file Config.sh):\cr
 #' \code{NTYPES=2}\cr
 #' \code{GADGET2_HEADER}\cr
 #' \code{SELFGRAVITY}\cr
@@ -58,10 +58,10 @@
 #' \code{ENLARGE_DYNAMIC_RANGE_IN_TIME}\cr
 #' If and only if periodic boundary conditions are used, you also need to add the option\cr
 #' \code{PERIODIC}\cr
-#' If you plan to often switch between runs with open and periodic boundaries, it may be advisable to compile two versions of Gadget-4, with and without this option. To do so, one needs to create two sub-directories with the respective Config.sh files and compile them via\cr
+#' If you plan to often switch between runs with open and periodic boundaries, it may be advisable to compile two versions of GADGET-4, with and without this option. To do so, one needs to create two sub-directories with the respective Config.sh files and compile them via\cr
 #' \code{make -j [number of cores] DIR=[path containing Config.sh with PERIODIC]}\cr
 #' \code{make -j [number of cores] DIR=[path containing Config.sh without PERIODIC]}\cr
-#' The runtime parameter file (param.txt) needed by Gadget-4 is written automatically when calling \code{run.simulation}. The gravitational softening length in Gadget-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
+#' The runtime parameter file (param.txt) needed by GADGET-4 is written automatically when calling \code{run.simulation}. The gravitational softening length in GADGET-4 is computed as sim$para$rsmooth/2.8, which ensures that the particles behave like point masses at separations beyond sim$para$rsmooth. If rsmooth is not provided, it is computed as \code{stats::sd(apply(sim$ics$x,2,sd))*1e-5}. The accuracy parameter ErrTolIntAccuracy is set equal to sim$para$eta/sim$para$rsmooth*1e-3, which gives roughly comparable accuracy to in-built simulator for the Leapfrog integrator.
 #'
 #' @return The routine returns the structured list of the input argument, with one sublist \code{output} added. This sublist contains the items:
 #' \item{t}{k-vector with the simulation times of the k snapshots.}
