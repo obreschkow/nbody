@@ -237,7 +237,6 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
     n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
     ncheck = readBin(filename.output,'int',1,8)
-    print(c(n.save,ncheck))
     if (ncheck!=n.save) stop('wrong number of particles in file')
     dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),8)
     t.out = rep(NA,n.snapshots)
