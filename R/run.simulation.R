@@ -210,16 +210,17 @@ run.simulation = function(sim, measure.time = TRUE) {
     para[1] = sprintf('inputfile %s',filename.ics)
     para[2] = sprintf('outputpath %s',sim$code$interface)
     para[3] = 'outputformat 3'
-    para[4] = 'tinitial 0'
-    para[5] = sprintf('tfinal %.15e',sim$para$t.max)
-    para[6] = sprintf('dtmax %.15e',sim$para$dt.max)
-    para[7] = sprintf('dtmin %.15e',sim$para$dt.min)
-    para[8] = sprintf('dtout %.15e',sim$para$dt.out)
-    para[9] = sprintf('G %.15e',sim$para$G)
-    para[10] = sprintf('smoothing_radius %.15e',sim$para$rsmooth)
-    para[11] = sprintf('eta %.15e',sim$para$eta)
-    para[12] = sprintf('box_size %.15e',sim$para$box.size)
-    para[13] = sprintf('integrator %s',sim$para$integrator)
+    para[4] = sprintf('include_bg %d',as.numeric(sim$para$include.bg))
+    para[5] = 'tinitial 0'
+    para[6] = sprintf('tfinal %.15e',sim$para$t.max)
+    para[7] = sprintf('dtmax %.15e',sim$para$dt.max)
+    para[8] = sprintf('dtmin %.15e',sim$para$dt.min)
+    para[9] = sprintf('dtout %.15e',sim$para$dt.out)
+    para[10] = sprintf('G %.15e',sim$para$G)
+    para[11] = sprintf('smoothing_radius %.15e',sim$para$rsmooth)
+    para[12] = sprintf('eta %.15e',sim$para$eta)
+    para[13] = sprintf('box_size %.15e',sim$para$box.size)
+    para[14] = sprintf('integrator %s',sim$para$integrator)
     write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
 
     # run simulation
@@ -236,6 +237,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
     n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
     ncheck = readBin(filename.output,'int',1,8)
+    print(c(n.save,ncheck))
     if (ncheck!=n.save) stop('wrong number of particles in file')
     dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),8)
     t.out = rep(NA,n.snapshots)
