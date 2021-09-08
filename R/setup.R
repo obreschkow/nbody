@@ -7,7 +7,7 @@
 #' @aliases setup.earth
 #' @aliases setup.ellipse
 #' @aliases setup.3body.periodic
-#' @asiases setup.pythagoras
+#' @aliases setup.pythagoras
 #'
 #' @param t.max final simulation time
 #' @param dt.out time step for simulation output

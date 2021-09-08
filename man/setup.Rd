@@ -6,9 +6,9 @@
 \alias{setup.earth}
 \alias{setup.ellipse}
 \alias{setup.3body.periodic}
+\alias{setup.pythagoras}
 \alias{setup.sunearth}
 \alias{setup.periodic.3body}
-\alias{setup.pythagoras}
 \title{Initialize N-body simulation}
 \usage{
 setup()

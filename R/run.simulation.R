@@ -24,6 +24,7 @@
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr
 #' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.
+#' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 #' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
@@ -160,6 +161,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
     if (any(dim(a)!=dim(sim$ics$x))) stop('afield is not a correctly vectorized function of (x,t).\n')
   }
+  if (is.null(sim$para$include.bg)) sim$para$include.bg = FALSE
 
   # handle external code
   if (is.null(sim$code)) sim$code = list()
@@ -224,6 +226,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     system(sprintf('%s -parameterfile %s',sim$code$file, filename.para),intern=F)
 
     # read stats file
+    if (!file.exists(filename.stats)) stop(paste0('file does not exist: ',filename.stats))
     stats = read.table(filename.stats)
     n.snapshots = stats[4,2]
     n.iterations = stats[5,2]
@@ -231,16 +234,17 @@ run.simulation = function(sim, measure.time = TRUE) {
 
     # read snapshot files
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
+    n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
     ncheck = readBin(filename.output,'int',1,8)
-    if (ncheck!=n) stop('wrong number of particles in file')
-    dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n+1),8)
+    if (ncheck!=n.save) stop('wrong number of particles in file')
+    dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),8)
     t.out = rep(NA,n.snapshots)
-    x.out = v.out = array(NA,c(n.snapshots,n,3))
+    x.out = v.out = array(NA,c(n.snapshots,n.save,3))
     for (i.out in seq(n.snapshots)) {
-      offset = (6*n+1)*(i.out-1)
+      offset = (6*n.save+1)*(i.out-1)
       t.out[i.out] = dat[offset+2]
-      x.out[i.out,,] = dat[(offset+3):(offset+2+3*n)]
-      v.out[i.out,,] = dat[(offset+3+3*n):(offset+2+6*n)]
+      x.out[i.out,,] = dat[(offset+3):(offset+2+3*n.save)]
+      v.out[i.out,,] = dat[(offset+3+3*n.save):(offset+2+6*n.save)]
     }
 
     # complete output
@@ -516,13 +520,20 @@ run.simulation = function(sim, measure.time = TRUE) {
     # initialize output variables
     n.out = ceiling(sim$para$t.max/sim$para$dt.out)+2
     t.out = rep(NA,n.out)
-    x.out = v.out = array(NA,c(n.out,n,3))
+    if (sim$para$include.bg) {
+      n.save = n
+      save.list = 1:n
+    } else {
+      n.save = sum(sim$ics$m>=0)
+      save.list = sim$ics$m>=0
+    }
+    x.out = v.out = array(NA,c(n.out,n.save,3))
     i.out = 0
     .save.snapshot = function() {
       i.out <<- i.out+1
       t.out[i.out] <<- t
-      x.out[i.out,,] <<- x
-      v.out[i.out,,] <<- v
+      x.out[i.out,,] <<- x[save.list,]
+      v.out[i.out,,] <<- v[save.list,]
     }
 
     # initialize first iteration
