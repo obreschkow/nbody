@@ -155,7 +155,7 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$integrator)) sim$para$integrator='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
   if (sim$para$rsmooth<0) stop('smoothing radius cannot be negative.')
-  if (sim$para$t.max/sim$para$dt.out>1e5) stop('dt.out is too small for the simulation time t.max.\n')
+  if (sim$para$t.max/sim$para$dt.out>1e7) stop('dt.out is too small for the simulation time t.max.\n')
   if (!is.null(sim$para$afield)) {
     a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
     if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
