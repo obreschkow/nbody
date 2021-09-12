@@ -29,7 +29,8 @@
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 #' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
 #' \code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
-#' \code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.
+#' \code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.\cr
+#' \code{kind} = optional number of bytes per floating-point number used in nbodyx output files (has no bearing on computation accuracy)\cr
 #' \code{gadget.np} = number of processors used with GADGET-4 (defaults to 1, which is normally best for small direct N-body runs)
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
@@ -44,7 +45,7 @@
 #' Can be downloaded from github via\cr
 #' \code{git clone https://github.com/obreschkow/nbodyx}\cr
 #' Details on installing, compiling and running the code are given in the README file.\cr
-#' Note: To run very high-accuracy simulations, such as the Pythagorean three-body problem, you can use 128-byte floating-point numbers by compiling the code as\cr
+#' Note: To run very high-accuracy simulations, such as the Pythagorean three-body problem, you can use 128-bit floating-point numbers by compiling the code as\cr
 #' \code{make kind=16}\cr\cr
 #'
 #' GADGET-4 simulator:\cr
@@ -195,6 +196,9 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   if (sim$code$name=='nbodyx') {
 
+    # handle input
+    if (is.null(sim$code$kind)) sim$code$kind=8
+
     # make file names+paths
     filename.ics = file.path(sim$code$interface,'ics.txt')
     filename.para = file.path(sim$code$interface,'parameters.txt')
@@ -210,17 +214,18 @@ run.simulation = function(sim, measure.time = TRUE) {
     para[1] = sprintf('inputfile %s',filename.ics)
     para[2] = sprintf('outputpath %s',sim$code$interface)
     para[3] = 'outputformat 3'
-    para[4] = sprintf('include_bg %d',as.numeric(sim$para$include.bg))
-    para[5] = 'tinitial 0'
-    para[6] = sprintf('tfinal %.15e',sim$para$t.max)
-    para[7] = sprintf('dtmax %.15e',sim$para$dt.max)
-    para[8] = sprintf('dtmin %.15e',sim$para$dt.min)
-    para[9] = sprintf('dtout %.15e',sim$para$dt.out)
-    para[10] = sprintf('G %.15e',sim$para$G)
-    para[11] = sprintf('smoothing_radius %.15e',sim$para$rsmooth)
-    para[12] = sprintf('eta %.15e',sim$para$eta)
-    para[13] = sprintf('box_size %.15e',sim$para$box.size)
-    para[14] = sprintf('integrator %s',sim$para$integrator)
+    para[4] = sprintf('kind %d',sim$code$kind)
+    para[5] = sprintf('include_bg %d',as.numeric(sim$para$include.bg))
+    para[6] = 'tinitial 0'
+    para[7] = sprintf('tfinal %.15e',sim$para$t.max)
+    para[8] = sprintf('dtmax %.15e',sim$para$dt.max)
+    para[9] = sprintf('dtmin %.15e',sim$para$dt.min)
+    para[10] = sprintf('dtout %.15e',sim$para$dt.out)
+    para[11] = sprintf('G %.15e',sim$para$G)
+    para[12] = sprintf('smoothing_radius %.15e',sim$para$rsmooth)
+    para[13] = sprintf('eta %.15e',sim$para$eta)
+    para[14] = sprintf('box_size %.15e',sim$para$box.size)
+    para[15] = sprintf('integrator %s',sim$para$integrator)
     write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
 
     # run simulation
@@ -236,9 +241,9 @@ run.simulation = function(sim, measure.time = TRUE) {
     # read snapshot files
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
     n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
-    ncheck = readBin(filename.output,'int',1,8)
+    ncheck = readBin(filename.output,'int',1,sim$code$kind)
     if (ncheck!=n.save) stop('wrong number of particles in file')
-    dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),8)
+    dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),sim$code$kind)
     t.out = rep(NA,n.snapshots)
     x.out = v.out = array(NA,c(n.snapshots,n.save,3))
     for (i.out in seq(n.snapshots)) {
