@@ -238,23 +238,23 @@ run.simulation = function(sim, measure.time = TRUE) {
     n.iterations = stats[5,2]
     n.acceleration.evaluations = stats[6,2]
 
-    # read snapshot files
+    # read output of nbodyx
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
     n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
-    ncheck = readBin(filename.output,'int',1,sim$code$kind)
+    fileid = file(filename.output, "rb")
+    ncheck = readBin(fileid,'int',1,sim$code$kind)
     if (ncheck!=n.save) stop('wrong number of particles in file')
-    dat = readBin(filename.output,'numeric',1+n.snapshots*(6*n.save+1),sim$code$kind)
-    t.out = rep(NA,n.snapshots)
-    x.out = v.out = array(NA,c(n.snapshots,n.save,3))
-    for (i.out in seq(n.snapshots)) {
-      offset = (6*n.save+1)*(i.out-1)
-      t.out[i.out] = dat[offset+2]
-      x.out[i.out,,] = dat[(offset+3):(offset+2+3*n.save)]
-      v.out[i.out,,] = dat[(offset+3+3*n.save):(offset+2+6*n.save)]
-    }
+    dat = readBin(fileid,'numeric',1+n.snapshots*(6*n.save+1),sim$code$kind)
+    close(fileid)
+
+    # restructure output
+    dat = array(dat,c(1+6*n.save,n.snapshots))
+    t.out = dat[1,]
+    x.out = drop(array(t(dat[2:(1+3*n.save),]),c(n.snapshots,n.save,3)))
+    v.out = drop(array(t(dat[(2+3*n.save):(1+6*n.save),]),c(n.snapshots,n.save,3)))
 
     # complete output
-    sim$output = list(t = t.out[1:i.out], x = x.out[1:i.out,,], v = v.out[1:i.out,,],
+    sim$output = list(t = t.out, x = x.out, v = v.out,
                       n.snapshots = n.snapshots, n.iterations = n.iterations,
                       n.acceleration.evaluations = n.acceleration.evaluations)
 
