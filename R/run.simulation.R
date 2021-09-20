@@ -165,7 +165,13 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$include.bg)) sim$para$include.bg = FALSE
 
   # handle external code
-  if (is.null(sim$code)) sim$code = list()
+  if (is.null(sim$code)) {
+    if (is.null(.nbody.env$code)) {
+      sim$code = list()
+    } else {
+      sim$code = .nbody.env$code
+    }
+  }
   if (is.null(sim$code$name)) sim$code$name = 'R'
   if (sim$code$name!='R') {
     if (!is.null(sim$para$afield)) stop('afield can only be specified with code "R"')
