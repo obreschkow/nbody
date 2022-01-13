@@ -271,6 +271,8 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   else if (sim$code$name=='gadget4') {
 
+    if (min(sim$ics$m)<0) stop('GADGET-4 does not accept background particles. Make sure that all the masses in the ICs are non-negative.')
+
     # make file names+paths
     filename.ics = file.path(sim$code$interface,'ics.dat')
     filename.para = file.path(sim$code$interface,'param.txt')
