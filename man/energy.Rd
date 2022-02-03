@@ -4,7 +4,7 @@
 \alias{energy}
 \title{Mechanical energy of an N-body system}
 \usage{
-energy(m, x, v, rsmooth = 0, G = NULL, cpp = TRUE)
+energy(m, x, v, rsmooth = 0, G = 6.67408e-11, cpp = TRUE)
 }
 \arguments{
 \item{m}{N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.}
@@ -15,7 +15,7 @@ energy(m, x, v, rsmooth = 0, G = NULL, cpp = TRUE)
 
 \item{rsmooth}{top-hat smoothing radius.}
 
-\item{G}{gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.}
+\item{G}{gravitational constant. The default is the measured value in SI units.}
 
 \item{cpp}{logical flag. If TRUE (default), the computation is performed efficiently in C++.}
 }

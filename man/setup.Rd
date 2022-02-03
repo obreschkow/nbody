@@ -16,13 +16,13 @@ setup()
 setup.halley(
   t.max = NULL,
   nperiods = 1,
-  dt.out = 3 * cst$month,
+  dt.out = 1e+07,
   e = 0.96714,
-  s = 17.834 * cst$AU,
+  s = 2.667928e+12,
   ...
 )
 
-setup.sunearth(t.max = cst$yr, dt.out = cst$yr, ...)
+setup.sunearth(t.max = 31557600, dt.out = 86400 * 7, ...)
 
 setup.ellipse(t.max = NULL, nperiods = 1, e = 0.9, s = 1, f = 0.5, ...)
 
@@ -64,13 +64,13 @@ setup.pythagoras(t.max = 68, integrator = "yoshida6", eta = 0.002, ...)
 \value{
 Calling \code{setup()} is identical to calling setup.halley()
 
-\code{setup.halley()} sets up a 2-body simulation of Halley's Commet around the Sun.
+\code{setup.halley()} sets up a 2-body simulation of Halley's Comet around the Sun.
 
 \code{setup.sunearth()} sets up a simple 2-body simulation of the Earth around the Sun, using only approximate orbital specifications.
 
 \code{setup.ellipse()} sets up an elliptical Keplerian orbit in natural units
 
-\code{setup.periodic.3body()} can be used to set up a planar zero angular momentum stable 3-body problem with two unit masses and a third mass m3 (maybe equal of different from unity). Such situations can be parameterized with two parameters v1 and v2, following [https://arxiv.org/abs/1709.04775](https://arxiv.org/abs/1709.04775) and [https://arxiv.org/abs/1705.00527](https://arxiv.org/abs/1705.00527).\cr
+\code{setup.periodic.3body()} can be used to set up a planar zero angular momentum stable 3-body problem with two unit masses and a third mass m3 (maybe equal of different from unity). Such situations can be parameterized with two parameters v1 and v2, following the publications found at https://arxiv.org/abs/1709.04775 and https://arxiv.org/abs/1705.00527.\cr
 The default is the famous figure-of-eight, but try, for example, setup.3body.periodic(0.2034916865234370, 0.5181128588867190, 32.850, dt.out=0.02), setup.3body.periodic(0.2009656237, 0.2431076328, 19.0134164290, 0.5, dt.out=0.01) or setup.3body.periodic(0.991198122, 0.711947212, 17.650780784, 4, eta=0.005, dt.out=0.002).\cr\cr
 
 \code{setup.pythagoras()} sets up the Pythagorean three-body problem consisting of three unit masses placed at the vertices of a right triangle with side lengths 3, 4 and 5. The masses are initially at rest and the gravitational constant is unity.

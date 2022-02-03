@@ -22,7 +22,7 @@
 #' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
-#' \code{G} = gravitational constant in simulation units (see details). If not given, the SI value specified in \code{\link{cst}} is used.\cr
+#' \code{G} = gravitational constant in simulation units (see details). If not given, the measured value in SI units is used.\cr
 #' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.
 #' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.
 #'
@@ -37,7 +37,7 @@
 #'
 #' @details
 #' UNITS: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
-#' For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s≈4.74yrs.
+#' For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s=4.74yrs.
 #' Likewise, units of the gravitational constant \code{G} are given via [unit of G in m^3*kg^(-1)*s^(-2)] = [unit of length in meters] * [unit of velocity in m/s]^2 / [unit of mass in kg]. E.g., for length units of 1AU=1.49598e11m, velocity units of 1km/s=1e3m/s and mass units of 1Msun=1.98847e30kg, a unit of G is
 #' 7.523272e-14 m^3*kg^(-1)*s^(-2). In these units the true value of G is about 887.154.\cr\cr
 #'
@@ -77,7 +77,8 @@
 #' @examples
 #' sim = setup.halley()
 #' sim = run.simulation(sim)
-#' plot(sim, units=cst$AU, xlim=c(-20,60), ylim=c(-40,40), xlab='[AU]', ylab='[AU]')
+#' AU = 149597870700 # Astronomical unit in meters
+#' plot(sim, units=AU, xlim=c(-20,60), ylim=c(-40,40), xlab='[AU]', ylab='[AU]')
 #' cat(sprintf('This simulation was run with %d iterations.\n',sim$output$n.iterations))
 #'
 #' @author Danail Obreschkow
@@ -137,7 +138,7 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   # handle optional parameters
   if (is.null(sim$para)) sim$para = list()
-  if (is.null(sim$para$G)) sim$para$G = cst$G
+  if (is.null(sim$para$G)) sim$para$G = 6.67408e-11 # gravitational constant in SI units
   if (is.null(sim$para$box.size)) sim$para$box.size = 0
   if (is.null(sim$para$t.max)) {
     if (sim$para$G==0) {

@@ -5,7 +5,7 @@
 #' @param m N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.
 #' @param x N-by-3 matrix specifying the initial position in Cartesian coordinates
 #' @param v N-by-3 matrix specifying the initial velocities
-#' @param G gravitational constant. If not given, the SI value specified in \code{\link{cst}} is used.
+#' @param G gravitational constant. The default is the measured value in SI units.
 #' @param rsmooth top-hat smoothing radius.
 #' @param cpp logical flag. If TRUE (default), the computation is performed efficiently in C++.
 #'
@@ -15,7 +15,7 @@
 #'
 #' @export
 
-energy = function(m,x,v,rsmooth=0,G=NULL,cpp=TRUE) {
+energy = function(m,x,v,rsmooth=0,G=6.67408e-11,cpp=TRUE) {
 
   m = abs(m) # to make sure that fixed masses
 
@@ -25,7 +25,6 @@ energy = function(m,x,v,rsmooth=0,G=NULL,cpp=TRUE) {
   if (dim(x)[1]!=length(m)) stop('The length of m must be equal to the number of rows of x.')
   if (dim(v)[1]!=length(m)) stop('The length of m must be equal to the number of rows of v.')
 
-  if (is.null(G)) G=cst$G
   n = length(m)
 
   Ekin = 0.5*m*rowSums(v^2)

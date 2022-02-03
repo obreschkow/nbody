@@ -35,17 +35,18 @@
 setup = function() setup.halley()
 
 #' @rdname setup
-#' @return \code{setup.halley()} sets up a 2-body simulation of Halley's Commet around the Sun.
+#' @return \code{setup.halley()} sets up a 2-body simulation of Halley's Comet around the Sun.
 #' @export
-setup.halley = function(t.max=NULL, nperiods=1, dt.out=3*cst$month, e=0.96714, s=17.834*cst$AU, ...) {
+setup.halley = function(t.max=NULL, nperiods=1, dt.out=1e7, e=0.96714, s=2.667928e+12, ...) {
 
-  s = 17.834*cst$AU # [m] semi-major axis of Halley's Comet
-  e = 0.96714 # [-] orbital eccentricity
+  Msun = 1.98847e+30 # solar mass in kg
+  G = 6.67408e-11 # gravitational constant in SI units
+
   x.peri = (1-e)*s # [m] perihelion distance; as global variable for later use
   x.ap = (1+e)*s # [m] aphelion distance
-  v.ap = sqrt((1-e)*cst$G*cst$Msun/(1+e)/s) # [m/s] aphelion velocity
-  period = 2*pi*s*sqrt(s/cst$G/cst$Msun) # [s] orbital period
-  m = c(cst$Msun,2.2e14) # [m] masses of the sun and the comet
+  v.ap = sqrt((1-e)*G*Msun/(1+e)/s) # [m/s] aphelion velocity
+  period = 2*pi*s*sqrt(s/G/Msun) # [s] orbital period
+  m = c(Msun,2.2e14) # [m] masses of the sun and the comet
   x = rbind(c(0,0,0),c(x.ap,0,0)) # [m] position matrix
   v = rbind(c(0,0,0),c(0,v.ap,0)) # [m/s] velocity matrix
 
@@ -62,16 +63,21 @@ setup.halley = function(t.max=NULL, nperiods=1, dt.out=3*cst$month, e=0.96714, s
 #' @rdname setup
 #' @return \code{setup.sunearth()} sets up a simple 2-body simulation of the Earth around the Sun, using only approximate orbital specifications.
 #' @export
-setup.sunearth = function(t.max=cst$yr, dt.out=cst$yr, ...) {
+setup.sunearth = function(t.max=31557600, dt.out=86400*7, ...) {
 
-  m = c(cst$Msun,cst$Mearth) # [m] masses of the sun and earth
-  x = rbind(c(-cst$Mearth/sum(m)*cst$AU,0,0),
-            c(cst$Msun/sum(m)*cst$AU,0,0)) # [m] position matrix
-  v = rbind(c(0,2*pi*x[1,1]/cst$yr,0),
-            c(0,2*pi*x[2,1]/cst$yr,0)) # [m/s] velocity matrix
+  year = 31557600 # year in seconds
+  AU = 149597870700 # Astronomical unit in meters
+  Mearth = 5.972e+24 # Earth mass in kg
+  Msun = 1.98847e+30 # solar mass in kg
+
+  m = c(Msun,Mearth) # [m] masses of the sun and earth
+  x = rbind(c(-Mearth/sum(m)*AU,0,0),
+            c(Msun/sum(m)*AU,0,0)) # [m] position matrix
+  v = rbind(c(0,2*pi*x[1,1]/year,0),
+            c(0,2*pi*x[2,1]/year,0)) # [m/s] velocity matrix
 
   sim = list(ics = list(m=m, x=x, v=v),
-             para = list(t.max = cst$yr, dt.out = cst$week, ...))
+             para = list(t.max = t.max, dt.out = dt.out, ...))
 
   class(sim) = 'simulation'
   return(sim)
@@ -109,7 +115,7 @@ setup.ellipse = function(t.max=NULL, nperiods=1, e=0.9, s=1, f=0.5, ...) {
 }
 
 #' @rdname setup
-#' @return \code{setup.periodic.3body()} can be used to set up a planar zero angular momentum stable 3-body problem with two unit masses and a third mass m3 (maybe equal of different from unity). Such situations can be parameterized with two parameters v1 and v2, following [https://arxiv.org/abs/1709.04775](https://arxiv.org/abs/1709.04775) and [https://arxiv.org/abs/1705.00527](https://arxiv.org/abs/1705.00527).\cr
+#' @return \code{setup.periodic.3body()} can be used to set up a planar zero angular momentum stable 3-body problem with two unit masses and a third mass m3 (maybe equal of different from unity). Such situations can be parameterized with two parameters v1 and v2, following the publications found at https://arxiv.org/abs/1709.04775 and https://arxiv.org/abs/1705.00527.\cr
 #' The default is the famous figure-of-eight, but try, for example, setup.3body.periodic(0.2034916865234370, 0.5181128588867190, 32.850, dt.out=0.02), setup.3body.periodic(0.2009656237, 0.2431076328, 19.0134164290, 0.5, dt.out=0.01) or setup.3body.periodic(0.991198122, 0.711947212, 17.650780784, 4, eta=0.005, dt.out=0.002).\cr\cr
 #' @export
 setup.periodic.3body = function(v1=0.3471128135672417, v2=0.532726851767674, t.max=6.3250, m3=1, ...){
