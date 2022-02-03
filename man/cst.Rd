@@ -10,6 +10,9 @@ An object of class \code{list} of length 20.
 \usage{
 cst
 }
+\value{
+None
+}
 \description{
 The list \code{cst} contains useful scientific constants in SI units, mainly for astrophysics.
 }

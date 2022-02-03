@@ -74,6 +74,9 @@
 
 \item{...}{additional parameters for \code{\link[graphics]{plot}}}
 }
+\value{
+None
+}
 \description{
 Basic routine to visualise the result of an N-body simulation, projected onto a plane.
 }

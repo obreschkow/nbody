@@ -6,6 +6,8 @@
 #' # print all the constants to console
 #' for (i in seq(length(cst))) cat(sprintf('%6s = %.12e\n',names(cst)[i],cst[i]))
 #'
+#' @return None
+#'
 #' @author Danail Obreschkow
 #'
 #' @export

@@ -37,7 +37,7 @@
 #'
 #' @details
 #' UNITS: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
-#' For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s=4.74yrs.
+#' For instance, [unit of time in seconds] = [unit of length in meters] / [unit of velocity in m/s]. E.g., if initial positions are given in units of 1AU=1.49598e11m and velocities in units of 1km/s, one unit of time is 1.49598e8s≈4.74yrs.
 #' Likewise, units of the gravitational constant \code{G} are given via [unit of G in m^3*kg^(-1)*s^(-2)] = [unit of length in meters] * [unit of velocity in m/s]^2 / [unit of mass in kg]. E.g., for length units of 1AU=1.49598e11m, velocity units of 1km/s=1e3m/s and mass units of 1Msun=1.98847e30kg, a unit of G is
 #' 7.523272e-14 m^3*kg^(-1)*s^(-2). In these units the true value of G is about 887.154.\cr\cr
 #'
@@ -191,12 +191,6 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (file.access(sim$code$interface,6)!=0) stop(sprintf('unable to create directory: %s',sim$code$interface))
   }
 
-  # make global variables from ICs
-  m = sim$ics$m
-  n = length(m)
-  x = sim$ics$x
-  v = sim$ics$v
-
 
   # nbodyx (Fortran code by D. Obreschkow) ************************************************************************************
 
@@ -212,7 +206,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     filename.output = file.path(sim$code$interface,'snapshot_all.bin')
 
     # write ICs file
-    ics = cbind(m,x,v)
+    ics = cbind(sim$ics$m,sim$ics$x,sim$ics$v)
     write.table(ics, filename.ics, col.names = FALSE, row.names = FALSE)
 
     # write parameter file
@@ -246,7 +240,7 @@ run.simulation = function(sim, measure.time = TRUE) {
 
     # read output of nbodyx
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
-    n.save = ifelse(sim$para$include.bg,n,sum(sim$ics$m>=0))
+    n.save = ifelse(sim$para$include.bg,length(sim$ics$m),sum(sim$ics$m>=0))
     fileid = file(filename.output, "rb")
     ncheck = readBin(fileid,'int',1,sim$code$kind)
     if (ncheck!=n.save) stop('wrong number of particles in file')
@@ -270,8 +264,6 @@ run.simulation = function(sim, measure.time = TRUE) {
   # GADGET-4 (Cosmological N-body simulator by V. Springel) ****************************************************************
 
   else if (sim$code$name=='gadget4') {
-
-    if (min(sim$ics$m)<0) stop('GADGET-4 does not accept background particles. Make sure that all the masses in the ICs are non-negative.')
 
     # make file names+paths
     filename.ics = file.path(sim$code$interface,'ics.dat')
@@ -364,100 +356,6 @@ run.simulation = function(sim, measure.time = TRUE) {
 
   }
 
-  # NBODY-6 ****************************************************************
-
-  else if (sim$code$name=='nbody6') {
-
-      stop('nbody6 interface not yet available')
-
-      # make file names+paths
-      filename.input = file.path(sim$code$interface,'input')
-      filename.output = file.path(sim$code$interface,'output')
-      filename.ics = file.path(sim$code$interface,'fort.10')
-
-      # write ICs file
-      if (any(m<0)) stop('masses cannot be fixed (negative) with nbody6')
-      ics = cbind(m,x,v)
-      write.table(ics, filename.ics, col.names = FALSE, row.names = FALSE)
-
-      # make parameter file (see details in nbody6/Ncode/define.f and nbody6/user/input_file_structure.pdf)
-      lines = {}
-
-      KSTART = 1 # Control index (1: new run; >1: restart; 3, 4, 5: new params).
-      TCOMP = 1e3 # Maximum CPU time in minutes (saved in CPU).
-      lines[1] = sprintf('%d %e',KSTART,TCOMP)
-
-      N = n # Number of objects (N_s + 2*N_b; singles + 3*NBIN0 < NMAX).
-      NFIX = 0 # ? Output frequency of data save or binaries (options 3 & 6).
-      NCRIT = 0 # ? Final particle number (alternative termination criterion).
-      NRAND = 0 # Random number seed.
-      NNBMAX = 1 # ? Maximum number of neighbours (< LMAX - 5).
-      NRUN = 1 # ? Run identification index.
-      lines[2] = sprintf('%d %d %d %d %d %d',N,NFIX,NCRIT,NRAND,NNBMAX,NRUN)
-
-      ETAI = 0.02 # Time-step parameter for irregular force polynomial.
-      ETAR = 0.02 # Time-step parameter for regular force polynomial.
-      RS0 = 0.0 # Initial radius of neighbour sphere (N-body units).
-      DTADJ = 0.5 # Time interval for parameter adjustment (N-body units).
-      DELTAT = 0.2 # ? Output time interval (N-body units).
-      TCRIT = 1.0 # ? Termination time (N-body units).
-      QE = 1e-3 # Energy tolerance (restart if DE/E > 5*QE & KZ(2) > 1).
-      RBAR = 0.0 # Virial cluster radius in pc (set = 1 for isolated cluster).
-      ZMBAR = 0.0 # Mean mass in solar units (=1.0 if 0; final depends on #20).
-      lines[3] = sprintf('%e %e %e %e %e %e %e %e %e',ETAI,ETAR,RS0,DTADJ,DELTAT,TCRIT,QE,RBAR,ZMBAR)
-
-      OPTIONS = rep(0,50)
-      OPTIONS[1] = 0 # COMMON save unit 1 (=1: 'touch STOP'; =2: every 100*NMAX steps).
-      OPTIONS[2] = 0 # COMMON save unit 2 (=1: at output; =2: restart if DE/E > 5*QE).
-      OPTIONS[3] = 1 # Basic data unit 3 at output time
-      OPTIONS[6] = 3
-      OPTIONS[15] = 0 # ? Triple, quad, chain (#30 > 0) or merger search (>1: more output).
-      OPTIONS[22] = 3 # ICs type: =3: no scaling of input read on fort.10;
-      OPTIONS[26] = 0 # ? Slow-down of two-body motion (>=1: KS; >=2: chain; =3: rectify).
-      OPTIONS[30] = 0 # Multiple regularization (=1: all; >1: BEGIN/END; >2: each step); =-1: CHAIN only; =-2: TRIPLE & QUAD only.
-      OPTIONS[38] = 0 # Force polynomial corrections (=0: standard, no corrections; =1: all gains & losses included; =2: small FREG change skipped; =3: fast neighbour loss only).
-      OPTIONS[40] = 0 # Neighbour number control (=1: increase if <NNB>  <  NNBMAX/2); >=2: fine-tuning at NNBMAX/5; =3: reduction of NNBMAX.
-
-      lines[4] = gsub(',','',toString(OPTIONS[01:10]))
-      lines[5] = gsub(',','',toString(OPTIONS[11:20]))
-      lines[6] = gsub(',','',toString(OPTIONS[21:30]))
-      lines[7] = gsub(',','',toString(OPTIONS[31:40]))
-      lines[8] = gsub(',','',toString(OPTIONS[41:50]))
-
-      DTMIN = 4e-5 # Time-step criterion for regularization search.
-      RMIN = 0.0 # Distance criterion for regularization search.
-      ETAU = 0.002 # Regularized time-step parameter (6.28/ETAU steps/orbit).
-      ECLOSE = 0.0 # Binding energy per unit mass for hard binary (positive).
-      GMIN = 1e-6 # Relative two-body perturbation for unperturbed motion.
-      GMAX = 1e-3 # Secondary termination parameter for soft KS binaries.
-      lines[9] = sprintf('%e %e %e %e %e %e',DTMIN,RMIN,ETAU,ECLOSE,GMIN,GMAX)
-
-      ALPHAS = 0.0 # Power-law index for initial mass function (used if #20 < 2).
-      BODY1 = 0.0 # Maximum particle mass before scaling (KZ(20): solar mass).
-      BODYN = 0.0 # Minimum particle mass before scaling.
-      NBIN0 = 0 # Number of primordial binaries (for IMF2 with KZ(20) > 1).
-      NHI0 = 0 # Primordial hierarchies (may be needed in IMF if > 0).
-      ZMET = 0.0 # Metal abundance (in range 0.03 - 0.0001).
-      EPOCH0 = 0 # Evolutionary epoch (in 10**6 yrs; NB! < 0 for PM evolution).
-      DTPLOT = 0 # Plotting interval for HRDIAG (N-body units; >= DELTAT).
-      lines[10] = sprintf('%e %e %e %d %d %e %e %e',ALPHAS,BODY1,BODYN,NBIN0,NHI0,ZMET,EPOCH0,DTPLOT)
-
-      Q = 0.0 # Virial ratio (Q = 0.5 for equilibrium).
-      VXROT = 0 # XY-velocity scaling factor (> 0 for solid-body rotation).
-      VZROT = 0 # Z-velocity scaling factor (not used if VXROT = 0).
-      RTIDE = 0 # Unscaled tidal radius (#14 >= 2; otherwise copied to RSPH2).
-      SMAX = 1 # Maximum time-step (factor of 2 commensurate with 1.0).
-      lines[11] = sprintf('%e %e %e %e %e',Q,VXROT,VZROT,RTIDE,SMAX)
-      write.table(lines, file=filename.input, col.names = FALSE, row.names = FALSE, quote = FALSE)
-
-      # run simulation
-      print(sprintf('cd %s; %s <input> output',sim$code$interface, sim$code$file))
-
-      system(sprintf('cd %s; %s <input> output',sim$code$interface, sim$code$file),intern=F)
-      stop()
-
-  }
-
 
   # In-built simulator with C++ acceleration ************************************************************************
 
@@ -467,17 +365,17 @@ run.simulation = function(sim, measure.time = TRUE) {
 
       iteration = function(dt) {
         .evaluate.accelerations()
-        x <<- x+v*dt+0.5*a*dt^2
-        v <<- v+a*dt
+        global$x = global$x+global$v*dt+0.5*global$a*dt^2
+        global$v = global$v+global$a*dt
       }
 
     } else if (sim$para$integrator=='leapfrog') {
 
       iteration = function(dt) {
-        v <<- v+a*dt/2
-        x <<- x+v*dt
+        global$v = global$v+global$a*dt/2
+        global$x = global$x+global$v*dt
         .evaluate.accelerations()
-        v <<- v+a*dt/2
+        global$v = global$v+global$a*dt/2
       }
 
     } else if (sim$para$integrator%in%c('yoshida','yoshida4')) {
@@ -488,11 +386,11 @@ run.simulation = function(sim, measure.time = TRUE) {
       .d.yoshida = c(.w1,.w0,.w1)
       iteration = function(dt) {
         for (i in seq(3)) {
-          x <<- x+.c.yoshida[i]*v*dt
+          global$x = global$x+.c.yoshida[i]*global$v*dt
           .evaluate.accelerations()
-          v <<- v+.d.yoshida[i]*a*dt
+          global$v = global$v+.d.yoshida[i]*global$a*dt
         }
-        x <<- x+.c.yoshida[4]*v*dt
+        global$x = global$x+.c.yoshida[4]*global$v*dt
       }
 
     } else if (sim$para$integrator=='yoshida6') {
@@ -505,11 +403,11 @@ run.simulation = function(sim, measure.time = TRUE) {
       .c.yoshida = c(.d.yoshida[1]/2,(.d.yoshida[1:8]+.d.yoshida[2:9])/2,.d.yoshida[9]/2)
       iteration = function(dt) {
         for (i in seq(9)) {
-          x <<- x+.c.yoshida[i]*v*dt
+          global$x = global$x+.c.yoshida[i]*global$v*dt
           .evaluate.accelerations()
-          v <<- v+.d.yoshida[i]*a*dt
+          global$v = global$v+.d.yoshida[i]*global$a*dt
         }
-        x <<- x+.c.yoshida[10]*v*dt
+        global$x = global$x+.c.yoshida[10]*global$v*dt
       }
 
     } else {
@@ -520,20 +418,28 @@ run.simulation = function(sim, measure.time = TRUE) {
 
     # acceleration function
     .evaluate.accelerations = function() {
-      n.acceleration.evaluations <<- n.acceleration.evaluations+1
+      global$n.acceleration.evaluations = global$n.acceleration.evaluations+1
       if (is.null(sim$para$afield)) {
-        a[,] <<- 0
+        global$a[,] = 0
       } else {
-        a = sim$para$afield(x,t)
+        global$a = sim$para$afield(global$x,global$t)
       }
-      f = accelerations(m,x,v,a,sim$para$G,rsmoothsqr,sim$para$box.size)
-      a[,] <<- f$a
-      dt.var <<- f$dtvar
+      f = accelerations(global$m,global$x,global$v,global$a,sim$para$G,rsmoothsqr,sim$para$box.size)
+      global$a[,] = f$a
+      global$dt.var = f$dtvar
     }
+
+    # create a global environment (these are variables that can potentially be modified inside functions)
+    global = new.env()
+    global$m = sim$ics$m
+    global$x = sim$ics$x
+    global$v = sim$ics$v
+    n = length(global$m)
+    global$a = array(0,c(n,3))
 
     # initialize output variables
     n.out = ceiling(sim$para$t.max/sim$para$dt.out)+2
-    t.out = rep(NA,n.out)
+    global$t.out = rep(NA,n.out)
     if (sim$para$include.bg) {
       n.save = n
       save.list = 1:n
@@ -541,42 +447,42 @@ run.simulation = function(sim, measure.time = TRUE) {
       n.save = sum(sim$ics$m>=0)
       save.list = sim$ics$m>=0
     }
-    x.out = v.out = array(NA,c(n.out,n.save,3))
-    i.out = 0
-    .save.snapshot = function() {
-      i.out <<- i.out+1
-      t.out[i.out] <<- t
-      x.out[i.out,,] <<- x[save.list,]
-      v.out[i.out,,] <<- v[save.list,]
-    }
+    global$x.out = global$v.out = array(NA,c(n.out,n.save,3))
+    global$i.out = 0
 
     # initialize first iteration
-    dt.var = NULL # only used for variable time-stepping
-    t = 0
+    global$t = 0
     n.iterations = 0
-    n.acceleration.evaluations = 0
-    .save.snapshot()
+    global$n.acceleration.evaluations = 0
     t.next = sim$para$dt.out # time of next output
     rsmoothsqr = sim$para$rsmooth^2
-    a = array(0,c(n,3)) # this line is necessary to make 'a' a local variable
     .evaluate.accelerations()
 
+    # save first snapshot
+    .save.snapshot = function() {
+      global$i.out = global$i.out+1
+      global$t.out[global$i.out] = global$t
+      global$x.out[global$i.out,,] = global$x[save.list,]
+      global$v.out[global$i.out,,] = global$v[save.list,]
+    }
+    .save.snapshot()
+
     # iterate
-    while (t < sim$para$t.max) {
-      dt = min(sim$para$dt.max, sim$para$t.max-t, t.next-t, max(sim$para$dt.min, sim$para$eta*dt.var))
+    while (global$t < sim$para$t.max) {
+      dt = min(sim$para$dt.max, sim$para$t.max-global$t, t.next-global$t, max(sim$para$dt.min, sim$para$eta*global$dt.var))
       iteration(dt)
-      t = t+dt
+      global$t = global$t+dt
       if (sim$para$box.size>0) x = x%%sim$para$box.size
       n.iterations = n.iterations+1
-      if (t>=t.next | t>=sim$para$t.max) {
+      if (global$t>=t.next | global$t>=sim$para$t.max) {
         .save.snapshot()
-        t.next = i.out*sim$para$dt.out
+        t.next = global$i.out*sim$para$dt.out
       }
     }
 
     # finalise output
-    sim$output = list(t = t.out[1:i.out], x = x.out[1:i.out,,], v = v.out[1:i.out,,],
-                      n.snapshots = i.out, n.iterations = n.iterations, n.acceleration.evaluations = n.acceleration.evaluations)
+    sim$output = list(t = global$t.out[1:global$i.out], x = global$x.out[1:global$i.out,,], v = global$v.out[1:global$i.out,,],
+                      n.snapshots = global$i.out, n.iterations = n.iterations, n.acceleration.evaluations = global$n.acceleration.evaluations)
 
   } else {
 
