@@ -40,10 +40,6 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
                            alpha.orbits=1, alpha.snapshots=1, lwd=1,
                            show.orbits=TRUE, show.snapshots=TRUE, show.ics=TRUE, show.fcs=TRUE, ...) {
 
-  # safe handling of par()
-  oldpar = par(no.readonly = TRUE)
-  on.exit(par(oldpar))
-
   # input check
   if (is.null(x$output)) stop('It seems that this simulation has not yet been run, as its output list is missing.')
   if (length(dim(x$output$x))==3) {
@@ -72,7 +68,6 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
   # open empty plot
   if (is.null(xlim)) xlim = range(x[,,index1])
   if (is.null(ylim)) ylim = range(x[,,index2])
-  par(pty=pty)
   magplot(NA,xlim=xlim,ylim=ylim,asp=asp,...)
 
   # draw trajectories
