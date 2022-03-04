@@ -68,7 +68,7 @@ plot.simulation = function(x, y, units=1, index1=1, index2=2, xlim=NULL, ylim=NU
   # open empty plot
   if (is.null(xlim)) xlim = range(x[,,index1])
   if (is.null(ylim)) ylim = range(x[,,index2])
-  magplot(NA,xlim=xlim,ylim=ylim,asp=asp,...)
+  magplot(NA,side=1:4,labels=c(T,T,F,F),xlim=xlim,ylim=ylim,asp=asp,xaxs='i',yaxs='i',...)
 
   # draw trajectories
   m = dim(x)[1]

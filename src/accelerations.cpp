@@ -50,7 +50,7 @@ List accelerations(NumericVector m, NumericMatrix x, NumericMatrix v, NumericMat
       if (m(i)>=0) {
         for (int j = 0; j<n; j++) { // ... due to particle j
           if (j!=i) {
-            double mj = abs(m(j));
+            double mj = fabs(m(j));
             if (mj>0) {
 
               // compute accelerations
