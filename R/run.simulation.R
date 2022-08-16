@@ -23,7 +23,7 @@
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the measured value in SI units is used.\cr
-#' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.
+#' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.\cr
 #' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
@@ -242,6 +242,7 @@ run.simulation = function(sim, measure.time = TRUE) {
     # read output of nbodyx
     if (!file.exists(filename.output)) stop(paste0('file does not exist: ',filename.output))
     n.save = ifelse(sim$para$include.bg,length(sim$ics$m),sum(sim$ics$m>=0))
+    if (n.save==0) stop('No particles in simulation output. Consider setting include.bg=TRUE.')
     fileid = file(filename.output, "rb")
     ncheck = readBin(fileid,'int',1,sim$code$kind)
     if (ncheck!=n.save) stop('wrong number of particles in file')
@@ -448,6 +449,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       n.save = sum(sim$ics$m>=0)
       save.list = sim$ics$m>=0
     }
+    if (n.save==0) stop('No particles in simulation output. Consider setting include.bg=TRUE.')
     global$x.out = global$v.out = array(NA,c(n.out,n.save,3))
     global$i.out = 0
 
