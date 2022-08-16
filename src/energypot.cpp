@@ -11,7 +11,7 @@ List energypot(NumericVector m, NumericMatrix x, NumericMatrix v, double rsmooth
 
   for (int i = 0; i<(n-1); i++) {
     for (int j = i+1; j<n; j++) {
-      if ((m(i)>0)&(m(j)>0)) {
+      if ((m(i)>0)&&(m(j)>0)) {
         double dx = x(i,0)-x(j,0); // faster than using a vector dx()
         double dy = x(i,1)-x(j,1);
         double dz = x(i,2)-x(j,2);
