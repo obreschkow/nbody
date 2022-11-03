@@ -168,28 +168,21 @@ run.simulation = function(sim, measure.time = TRUE) {
   # handle external code
   if (is.null(sim$code)) {
     if (is.null(.nbody.env$code)) {
-      sim$code = list()
+      sim$code = list(name='R')
     } else {
       sim$code = .nbody.env$code
     }
+  } else {
+    if (is.null(sim$code$name)) stop('A code$name must be specified, if the argument code is given.')
   }
-  if (is.null(sim$code$name)) sim$code$name = 'R'
   if (sim$code$name!='R') {
     if (!is.null(sim$para$afield)) stop('afield can only be specified with code "R"')
     if (is.null(sim$code$file)) stop('code$file must be specified for external simulation codes')
     if (!file.exists(sim$code$file)) stop(sprintf('simulation code does not exist: %s',sim$code$file))
     if (file.access(sim$code$file,1)!=0) stop(sprintf('you have no permission to execute the code: %s',sim$code$file))
-    if (is.null(sim$code$interface)) {
-      if (file.access(getwd(),4)!=0) stop('you do not have permission to read in the current directory; please specify code$interface.')
-      if (file.access(getwd(),2)!=0) stop('you do not have permission to write in the current directory; please specify code$interface.')
-      sim$code$interface=file.path(getwd(),'tmp_nbody_interface')
-    } else {
-      if (file.access(sim$code$interface,4)!=0) stop(sprintf('you do not have permission to read in: %s',sim$code$interface))
-      if (file.access(sim$code$interface,2)!=0) stop(sprintf('you do not have permission to write in: %s',sim$code$interface))
-    }
-    system(sprintf('rm -r %s',sim$code$interface))
-    system(sprintf('mkdir -p %s',sim$code$interface))
-    if (file.access(sim$code$interface,6)!=0) stop(sprintf('unable to create directory: %s',sim$code$interface))
+    if (is.null(sim$code$interface)) sim$code$interface=tempdir()
+    if (file.access(sim$code$interface,4)!=0) stop(sprintf('you do not have permission to read in: %s',sim$code$interface))
+    if (file.access(sim$code$interface,2)!=0) stop(sprintf('you do not have permission to write in: %s',sim$code$interface))
   }
 
 

@@ -20,5 +20,5 @@ default.code = function(code=NULL) {
     .nbody.env$code = code
   }
 
-  invisible(.nbody.env$code)
+  return(.nbody.env$code)
 }
