@@ -21,7 +21,7 @@
 #' \code{eta} = accuracy parameter of adaptive time step. Smaller values lead to proportionally smaller adaptive time steps. Typical values range between 0.001 and 0.1. If not given, a default value of 0.01 is assumed. To use fixed time steps, set \code{eta=1e99} and set a time step \code{dt.max}.\cr
 #' \code{integrator} = character string specifying the integrator to be used. Currently implemented integrators are 'euler' (1st order), 'leapfrog' (2nd order), 'yoshida' (4th order), 'yoshida6' (6th order). If not given, 'leapfrog' is the default integrator.\cr
 #' \code{rsmooth} = optional smoothing radius. If not given, no smoothing is assumed.\cr
-#' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed.\cr
+#' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed. If the external code "nbodyx" is used, then afield should be a vector of the parameters p1, p2, ... for the external acceleration field of "nbodyx".\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the measured value in SI units is used.\cr
 #' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.\cr
 #' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.
@@ -158,11 +158,6 @@ run.simulation = function(sim, measure.time = TRUE) {
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
   if (sim$para$rsmooth<0) stop('smoothing radius cannot be negative.')
   if (sim$para$t.max/sim$para$dt.out>1e7) stop('dt.out is too small for the simulation time t.max.\n')
-  if (!is.null(sim$para$afield)) {
-    a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
-    if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
-    if (any(dim(a)!=dim(sim$ics$x))) stop('afield is not a correctly vectorized function of (x,t).\n')
-  }
   if (is.null(sim$para$include.bg)) sim$para$include.bg = FALSE
 
   # handle external code
@@ -176,7 +171,6 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (is.null(sim$code$name)) stop('A code$name must be specified, if the argument code is given.')
   }
   if (sim$code$name!='R') {
-    if (!is.null(sim$para$afield)) stop('afield can only be specified with code "R"')
     if (is.null(sim$code$file)) stop('code$file must be specified for external simulation codes')
     if (!file.exists(sim$code$file)) stop(sprintf('simulation code does not exist: %s',sim$code$file))
     if (file.access(sim$code$file,1)!=0) stop(sprintf('you have no permission to execute the code: %s',sim$code$file))
@@ -185,6 +179,18 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (file.access(sim$code$interface,2)!=0) stop(sprintf('you do not have permission to write in: %s',sim$code$interface))
   }
 
+  # handle external acceleration field
+  if (!is.null(sim$para$afield)) {
+    if (sim$code$name=='R') {
+      a = try(sim$para$afield(sim$ics$x,0),silent=TRUE)
+      if (length(dim(a))!=2) stop('afield is not a correctly vectorized function of (x,t).\n')
+      if (any(dim(a)!=dim(sim$ics$x))) stop('afield is not a correctly vectorized function of (x,t).\n')
+    } else if (sim$code$name=='nbodyx') {
+      if (!is.numeric(sim$para$afield)) stop('When using nbodyx with an external field, then afield should be the vector of parameters. Set afield=0, if no parameters used.')
+    } else {
+      stop('afield can only be specified for codes "R" and "nbodyx"')
+    }
+  }
 
   # nbodyx (Fortran code by D. Obreschkow) ************************************************************************************
 
@@ -220,6 +226,15 @@ run.simulation = function(sim, measure.time = TRUE) {
     para[13] = sprintf('eta %.15e',sim$para$eta)
     para[14] = sprintf('box_size %.15e',sim$para$box.size)
     para[15] = sprintf('integrator %s',sim$para$integrator)
+    if (is.null(sim$para$afield)) {
+      para[16] = sprintf('acceleration n')
+    } else {
+      para[16] = sprintf('acceleration y')
+      for (i in seq_along(sim$para$afield)) {
+        para[16+i] = sprintf('p%d %.15e',i,sim$para$afield[i])
+      }
+    }
+
     write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
 
     # run simulation
@@ -468,7 +483,7 @@ run.simulation = function(sim, measure.time = TRUE) {
       dt = min(sim$para$dt.max, sim$para$t.max-global$t, t.next-global$t, max(sim$para$dt.min, sim$para$eta*global$dt.var))
       iteration(dt)
       global$t = global$t+dt
-      if (sim$para$box.size>0) x = x%%sim$para$box.size
+      if (sim$para$box.size>0) global$x = global$x%%sim$para$box.size
       n.iterations = n.iterations+1
       if (global$t>=t.next | global$t>=sim$para$t.max) {
         .save.snapshot()

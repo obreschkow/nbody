@@ -1,7 +1,7 @@
 Package: nbody
 Type: Package
 Title: Gravitational N-Body Simulation
-Version: 1.34
+Version: 1.35
 Author: Danail Obreschkow
 Maintainer: Danail Obreschkow <danail.obreschkow@gmail.com>
 Description: Tools to run simple direct gravitational N-body simulations. It can access different external N-body simulators, but also has a simple built-in default simulator. This default simulator uses a variable block time step and lets the user choose between a range of integrators, including 4th and 6th order integrators for high-accuracy simulations. Basic top-hat smoothing is available as an option. The code also allows the definition of background particles that are fixed or in uniform motion, not subject to acceleration by other particles.
