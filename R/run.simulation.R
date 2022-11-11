@@ -11,7 +11,7 @@
 #' \code{ics} is the sublist of initial conditions. It must contain the items:\cr
 #' \code{m} = N-vector with the masses of the N particles. Negative mass values are considered as positive masses belonging to a background field, which is not subject to any forces. Therefore particles with negative mass will have a normal effect on particles with positive masses, but they will not, themselves, be accelerated by any other particle.\cr
 #' \code{x} = N-by-3 matrix specifying the initial position in Cartesian coordinates\cr
-#' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
+#' \code{v} = N-by-3 matrix specifying the initial velocities\cr
 #'
 #' \code{para} is an optional sublist of optional simulation parameters. It contains the items:\cr
 #' \code{t.max} = final simulation time in simulation units (see details). If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
@@ -24,16 +24,18 @@
 #' \code{afield} = a function(x,t) of positions \code{x} (N-by-3 matrix) and time \code{t} (scalar), specifying the external acceleration field. It must return an N-by-3 matrix. If not given, no external field is assumed. If the external code "nbodyx" is used, then afield should be a vector of the parameters p1, p2, ... for the external acceleration field of "nbodyx".\cr
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the measured value in SI units is used.\cr
 #' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.\cr
-#' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.
+#' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.\cr
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 #' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
 #' \code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
 #' \code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.\cr
 #' \code{kind} = optional number of bytes per floating-point number used in nbodyx output files (has no bearing on computation accuracy)\cr
-#' \code{gadget.np} = number of processors used with GADGET-4 (defaults to 1, which is normally best for small direct N-body runs)
+#' \code{gadget.np} = number of processors used with GADGET-4 (defaults to 1, which is normally best for small direct N-body runs)\cr
 #'
 #' @param measure.time logical flag that determines whether time computation time will be measured and displayed.
+#'
+#' @param verbose logical flag indicating whether to show console outputs from external codes. Ignored when using the in-built simulator.
 #'
 #' @details
 #' UNITS: The initial conditions (in the sublist \code{ics}) can be provided in any units. The units of mass, length and velocity then fix the other units.
@@ -90,10 +92,10 @@
 ####################################################################################
 
 # Wrapper to catch errors and measure simulation time
-run.simulation = function(sim, measure.time = TRUE) {
-  return(tryCatch({
+run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
+  tryCatch({
     t.start = Sys.time()
-    sim = .run.sim(sim)
+    sim = .run.sim(sim,verbose)
     if (measure.time) {
       t.end = Sys.time()
       time.taken = as.double(t.end)-as.double(t.start)
@@ -103,17 +105,13 @@ run.simulation = function(sim, measure.time = TRUE) {
     message('Warning(s) produced in executing the simulation.')
     sim$output = NA
   }, error = function(e) {
-    message('Error(s) produced in executing the simulation.')
-    message(e)
-    message('\n')
-    sim$output = NA
-  }, finally = {
-    return(sim)
-  }))
+    stop(paste('run.simulation: ',e[[1]]),call.=FALSE)
+  })
+  return(sim)
 }
 
 # Core simulation routine
-.run.sim = function(sim=NULL) {
+.run.sim = function(sim=NULL,verbose) {
 
   # check ICs
   if (is.null(sim)) stop('Mandatory argument "sim" is missing.\n')
@@ -238,7 +236,8 @@ run.simulation = function(sim, measure.time = TRUE) {
     write.table(para, file=filename.para, col.names = FALSE, row.names = FALSE, quote = FALSE)
 
     # run simulation
-    system(sprintf('%s -parameterfile %s',sim$code$file, filename.para),intern=F)
+    error.code = system(sprintf('%s -parameterfile %s',sim$code$file, filename.para),intern=FALSE,ignore.stderr=TRUE,ignore.stdout=!verbose)
+    if (error.code>0) stop('Could not execute the nbodyx code. Try recompiling nbodyx.')
 
     # read stats file
     if (!file.exists(filename.stats)) stop(paste0('file does not exist: ',filename.stats))
@@ -344,9 +343,11 @@ run.simulation = function(sim, measure.time = TRUE) {
     if (is.null(sim$code$gadget.np)) sim$code$gadget.np = 1
     if (sim$code$gadget.np<1) stop('gadget.np must be a positive integer.')
     cmd = sprintf('mpirun -np %d %s %s', sim$code$gadget.np, sim$code$file, filename.para)
-    system(cmd,intern=F)
+    error.code = system(cmd,intern=FALSE,ignore.stderr=TRUE,ignore.stdout=!verbose)
+    if (error.code>0) stop('Could not execute the gadget code. Try recompiling gadget.')
 
     # load data
+    n = length(sim$ics$m)
     n.snapshots = 0
     while(file.exists(sprintf('%s/snapshot_%03d',directory.output,n.snapshots))) n.snapshots=n.snapshots+1
     if (n.snapshots<2) stop('not enough GADGET-4 snapshots found')
