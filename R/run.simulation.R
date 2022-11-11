@@ -317,9 +317,9 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
     i=i+1; para[i] = sprintf('MaxSizeTimestep                                   %.12e',min(sim$para$dt.out,sim$para$dt.max))
     i=i+1; para[i] = sprintf('MinSizeTimestep                                   %.12e',0)
     i=i+1; para[i] = sprintf('TypeOfOpeningCriterion                            1')
-    i=i+1; para[i] = sprintf('ErrTolTheta                                       0') # only used for tree scheeme
-    i=i+1; para[i] = sprintf('ErrTolThetaMax                                    0') # only used for tree scheeme
-    i=i+1; para[i] = sprintf('ErrTolForceAcc                                    0') # only used for tree scheeme
+    i=i+1; para[i] = sprintf('ErrTolTheta                                       0') # only used for tree scheme
+    i=i+1; para[i] = sprintf('ErrTolThetaMax                                    0') # only used for tree scheme
+    i=i+1; para[i] = sprintf('ErrTolForceAcc                                    0') # only used for tree scheme
     i=i+1; para[i] = sprintf('TopNodeFactor                                     2.5')
     i=i+1; para[i] = sprintf('ActivePartFracForNewDomainDecomp                  0.01')
     i=i+1; para[i] = sprintf('DesNumNgb                                         64')
