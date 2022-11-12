@@ -30,7 +30,7 @@ run.simulation(sim, measure.time = TRUE, verbose = TRUE)
 \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
 \code{file} = character string specifying the path+filename of the external compiled simulation code.\cr
-\code{interface} = optional character string specifying a temporary working path used as interface with external codes. If not given, the current working directory is used by default.\cr
+\code{interface} = optional character string specifying a temporary working path used as interface with external codes. NOTE: All existing files in this directory are deleted! If not given, the current working directory is used by default.\cr
 \code{kind} = optional number of bytes per floating-point number used in nbodyx output files (has no bearing on computation accuracy)\cr
 \code{gadget.np} = number of processors used with GADGET-4 (defaults to 1, which is normally best for small direct N-body runs)\cr}
 
