@@ -4,7 +4,6 @@
 #'
 #' @author Danail Obreschkow <danail.obreschkow@gmail.com>
 #'
-#' @docType package
-#' @name nbody
+"_PACKAGE"
 #' @useDynLib nbody
 NULL
