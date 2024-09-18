@@ -1,10 +1,9 @@
 #' @title Gravitational N-Body Simulation
 #'
-#' @description Tools to run simple direct gravitational N-body simulations. It can access different external N-body simulators, but also has a simple built-in default simulator. This default simulator uses a variable block time step and lets the user choose between a range of integrators, including 4th and 6th order integrators for high-accuracy simulations. Basic top-hat smoothing is available as an option. The code also allows the definition of background particles that are fixed or in uniform motion, not subject to acceleration by other particles.
+#' @description Run simple direct gravitational N-body simulations. The package can access different external N-body simulators (e.g. GADGET-4 by Springel et al., 2021), but also has a simple built-in simulator. This default simulator uses a variable block time step and lets the user choose between a range of integrators, including 4th and 6th order integrators for high-accuracy simulations. Basic top-hat smoothing is available as an option. The code also allows the definition of background particles that are fixed or in uniform motion, not subject to acceleration by other particles.
 #'
 #' @author Danail Obreschkow <danail.obreschkow@gmail.com>
 #'
-#' @docType package
-#' @name nbody
+"_PACKAGE"
 #' @useDynLib nbody
 NULL
