@@ -11,7 +11,7 @@
 #' \code{ics} is the sublist of initial conditions. It must contain the items:\cr
 #' \code{m} = N-vector with the masses of the N particles. Negative mass values are considered as positive masses belonging to a background field, which is not subject to any forces. Therefore particles with negative mass will have a normal effect on particles with positive masses, but they will not, themselves, be accelerated by any other particle.\cr
 #' \code{x} = N-by-3 matrix specifying the initial position in Cartesian coordinates\cr
-#' \code{v} = N-by-3 matrix specifying the initial velocities\cr
+#' \code{v} = N-by-3 matrix specifying the initial velocities\cr\cr
 #'
 #' \code{para} is an optional sublist of optional simulation parameters. It contains the items:\cr
 #' \code{t.max} = final simulation time in simulation units (see details). If not given, a characteristic time is computed as \code{t.max = 2*pi*sqrt(R^3/GM)}, where \code{R} is the RMS radius and \code{M} is the total mass.\cr
@@ -25,6 +25,7 @@
 #' \code{G} = gravitational constant in simulation units (see details). If not given, the measured value in SI units is used.\cr
 #' \code{box.size} = scalar>=0. If 0, open boundary conditions are adopted. If >0, the simulation is run in a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates, and all initial positions must be contained in this interval. For periodic boundary conditions, the force between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries. The exception is GADGET-4, which also evaluates the forces from the periodic repetitions.\cr
 #' \code{include.bg} = logical argument. If FALSE (default), only foreground particles, i.e. particles with masses >=0, are contained in the output vectors \code{x} and \code{v}. If TRUE, all particles are included.\cr
+#' \code{ignore.size} = logical argument. If FALSE (default), the number of snapshots is limited to 1e7 and an error is produced if this number is expected to be exceeded.\cr\cr
 #'
 #' \code{code} is an optional sublist to force the use of an external simulation code (see details). It contains the items:\cr
 #' \code{name} = character string specifying the name of the code, currently available options are "R" (default), "nbodyx" (a simple, but fast N-body simulator in Fortran) and "gadget4" (a powerful N-body+SPH simulator, not very adequate for small direct N-body simulations).\cr
@@ -155,7 +156,11 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
   if (is.null(sim$para$integrator)) sim$para$integrator='leapfrog'
   if (is.null(sim$para$rsmooth)) sim$para$rsmooth=0
   if (sim$para$rsmooth<0) stop('smoothing radius cannot be negative.')
-  if (sim$para$t.max/sim$para$dt.out>1e7) stop('dt.out is too small for the simulation time t.max.\n')
+  if (sim$para$t.max/sim$para$dt.out>1e7) {
+    if (is.null(sim$para$ignore.size)||!sim$para$ignore.size) {
+      stop('dt.out is too small for the simulation time t.max\nSupress error by setting parameter ignore.size to true.\n')
+    }
+  }
   if (is.null(sim$para$include.bg)) sim$para$include.bg = FALSE
 
   # handle external code
