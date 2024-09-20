@@ -1,7 +1,7 @@
 Package: nbody
 Type: Package
 Title: Gravitational N-Body Simulation
-Version: 1.42
+Version: 1.43
 Authors@R: 
     c(person(given = "Danail",
              family = "Obreschkow",

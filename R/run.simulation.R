@@ -177,10 +177,14 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
     if (is.null(sim$code$file)) stop('code$file must be specified for external simulation codes')
     if (!file.exists(sim$code$file)) stop(sprintf('simulation code does not exist: %s',sim$code$file))
     if (file.access(sim$code$file,1)!=0) stop(sprintf('you have no permission to execute the code: %s',sim$code$file))
-    if (is.null(sim$code$interface)) sim$code$interface=tempdir()
+    if (is.null(sim$code$interface)) {
+      sim$code$interface=tempfile()
+      dir.create(sim$code$interface)
+    }
     if (file.access(sim$code$interface,4)!=0) stop(sprintf('you do not have permission to read in: %s',sim$code$interface))
     if (file.access(sim$code$interface,2)!=0) stop(sprintf('you do not have permission to write in: %s',sim$code$interface))
-    unlink(paste0(sim$code$interface,'/*'),recursive=TRUE) # remove all files from interface directory
+    files = list.files(sim$code$interface, full.names = TRUE, recursive = TRUE)
+    unlink(files,recursive=TRUE) # remove all files from interface directory
   }
 
   # handle external acceleration field
