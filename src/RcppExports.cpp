@@ -28,8 +28,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // energypot
-List energypot(NumericVector m, NumericMatrix x, NumericMatrix v, double rsmooth);
-RcppExport SEXP _nbody_energypot(SEXP mSEXP, SEXP xSEXP, SEXP vSEXP, SEXP rsmoothSEXP) {
+List energypot(NumericVector m, NumericMatrix x, NumericMatrix v, double rsmooth, double L);
+RcppExport SEXP _nbody_energypot(SEXP mSEXP, SEXP xSEXP, SEXP vSEXP, SEXP rsmoothSEXP, SEXP LSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,14 +37,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type v(vSEXP);
     Rcpp::traits::input_parameter< double >::type rsmooth(rsmoothSEXP);
-    rcpp_result_gen = Rcpp::wrap(energypot(m, x, v, rsmooth));
+    Rcpp::traits::input_parameter< double >::type L(LSEXP);
+    rcpp_result_gen = Rcpp::wrap(energypot(m, x, v, rsmooth, L));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_nbody_accelerations", (DL_FUNC) &_nbody_accelerations, 7},
-    {"_nbody_energypot", (DL_FUNC) &_nbody_energypot, 4},
+    {"_nbody_energypot", (DL_FUNC) &_nbody_energypot, 5},
     {NULL, NULL, 0}
 };
 

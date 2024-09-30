@@ -4,7 +4,7 @@
 \alias{energy}
 \title{Mechanical energy of an N-body system}
 \usage{
-energy(m, x, v, rsmooth = 0, G = 6.67408e-11, cpp = TRUE)
+energy(m, x, v, rsmooth = 0, box.size = 0, G = 6.67408e-11, cpp = TRUE)
 }
 \arguments{
 \item{m}{N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.}
@@ -13,7 +13,9 @@ energy(m, x, v, rsmooth = 0, G = 6.67408e-11, cpp = TRUE)
 
 \item{v}{N-by-3 matrix specifying the initial velocities}
 
-\item{rsmooth}{top-hat smoothing radius.}
+\item{rsmooth}{top-hat smoothing radius. If 0 given, no smoothing is assumed.}
+
+\item{box.size}{scalar>=0. If 0, open boundary conditions are adopted. If >0, potential energies are computed assuming a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates. The separation between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries.}
 
 \item{G}{gravitational constant. The default is the measured value in SI units.}
 

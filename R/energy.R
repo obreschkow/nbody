@@ -6,7 +6,8 @@
 #' @param x N-by-3 matrix specifying the initial position in Cartesian coordinates
 #' @param v N-by-3 matrix specifying the initial velocities
 #' @param G gravitational constant. The default is the measured value in SI units.
-#' @param rsmooth top-hat smoothing radius.
+#' @param rsmooth top-hat smoothing radius. If 0 given, no smoothing is assumed.
+#' @param box.size scalar>=0. If 0, open boundary conditions are adopted. If >0, potential energies are computed assuming a cubic box of side length box.size with periodic boundary conditions. In this case, the cubic box is contained in the interval [0,box.size) in all three Cartesian coordinates. The separation between any two particles is always calculated along their shortest separation, which may cross 0-3 boundaries.
 #' @param cpp logical flag. If TRUE (default), the computation is performed efficiently in C++.
 #'
 #' @return Returns a list with vector items \code{Ekin}, \code{Epot}, \code{Emec=Ekin+Epot}; and the associated total quantities \code{Ekin.tot}, \code{Epot.tot}, \code{Emec=Ekin+Epot.tot}.
@@ -15,7 +16,7 @@
 #'
 #' @export
 
-energy = function(m,x,v,rsmooth=0,G=6.67408e-11,cpp=TRUE) {
+energy = function(m,x,v,rsmooth=0,box.size=0,G=6.67408e-11,cpp=TRUE) {
 
   m = abs(m) # to make sure that fixed masses
 
@@ -37,17 +38,42 @@ energy = function(m,x,v,rsmooth=0,G=6.67408e-11,cpp=TRUE) {
   } else {
 
     Epot = rep(0,n)
-    for (i in seq(1,n-1)) {
-      for (j in seq(i+1,n)) {
-        r = sqrt(sum((x[i,]-x[j,])^2))
-        if (r>rsmooth) {
-          dEpot = -m[i]*m[j]/r
-        } else {
-          dEpot = -m[i]*m[j]*(3-r^2/rsmooth^2)/(2*rsmooth)
+
+    if (box.size==0) {
+
+      for (i in seq(1,n-1)) {
+        for (j in seq(i+1,n)) {
+          r = sqrt(sum((x[i,]-x[j,])^2))
+          if (r>rsmooth) {
+            dEpot = -m[i]*m[j]/r
+          } else {
+            dEpot = -m[i]*m[j]*(3-r^2/rsmooth^2)/(2*rsmooth)
+          }
+          Epot[i] = Epot[i]+dEpot
+          Epot[j] = Epot[j]+dEpot
         }
-        Epot[i] = Epot[i]+dEpot
-        Epot[j] = Epot[j]+dEpot
       }
+
+    } else if (box.size>0) {
+
+      h = box.size/2
+      for (i in seq(1,n-1)) {
+        for (j in seq(i+1,n)) {
+          r = sqrt(sum(((x[i,]-x[j,]+h)%%box.size-h)^2))
+          if (r>rsmooth) {
+            dEpot = -m[i]*m[j]/r
+          } else {
+            dEpot = -m[i]*m[j]*(3-r^2/rsmooth^2)/(2*rsmooth)
+          }
+          Epot[i] = Epot[i]+dEpot
+          Epot[j] = Epot[j]+dEpot
+        }
+      }
+
+    } else {
+
+      stop('Invalid box.size.')
+
     }
 
   }
