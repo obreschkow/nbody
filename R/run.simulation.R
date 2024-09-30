@@ -137,7 +137,7 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
 
   # handle optional parameters
   if (is.null(sim$para)) sim$para = list()
-  if (is.null(sim$para$G)) sim$para$G = 6.67408e-11 # gravitational constant in SI units
+  if (is.null(sim$para$G)) sim$para$G = 6.67430e-11 # gravitational constant in SI units
   if (is.null(sim$para$box.size)) sim$para$box.size = 0
   if (is.null(sim$para$t.max)) {
     if (sim$para$G==0) {

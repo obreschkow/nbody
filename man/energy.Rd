@@ -4,7 +4,7 @@
 \alias{energy}
 \title{Mechanical energy of an N-body system}
 \usage{
-energy(m, x, v, rsmooth = 0, box.size = 0, G = 6.67408e-11, cpp = TRUE)
+energy(m, x, v, rsmooth = 0, box.size = 0, G = 6.6743e-11, cpp = TRUE)
 }
 \arguments{
 \item{m}{N-vector with the masses of the N particles. Negative masses are treated as positive masses of same magnitude, since negative masses normally represent positive background masses in the nbody package.}

@@ -16,7 +16,7 @@
 #'
 #' @export
 
-energy = function(m,x,v,rsmooth=0,box.size=0,G=6.67408e-11,cpp=TRUE) {
+energy = function(m,x,v,rsmooth=0,box.size=0,G=6.67430e-11,cpp=TRUE) {
 
   m = abs(m) # to make sure that fixed masses
 
