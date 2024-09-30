@@ -33,7 +33,7 @@ energy = function(m,x,v,rsmooth=0,box.size=0,G=6.67408e-11,cpp=TRUE) {
 
   if (cpp) {
 
-    Epot = energypot(m,x,v,rsmooth)$Epot
+    Epot = energypot(m,x,v,rsmooth,box.size)$Epot
 
   } else {
 
