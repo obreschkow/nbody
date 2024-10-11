@@ -279,7 +279,8 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
     # complete output
     sim$output = list(t = t.out, x = x.out, v = v.out,
                       n.snapshots = n.snapshots, n.iterations = n.iterations,
-                      n.acceleration.evaluations = n.acceleration.evaluations)
+                      n.acceleration.evaluations = n.acceleration.evaluations,
+                      wall.time = as.numeric(proc.time()[3]-time.start))
 
   }
 
@@ -377,7 +378,8 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
     # complete output
     sim$output = list(t = t.out, x = x.out, v = v.out,
                       n.snapshots = n.snapshots, n.iterations = NA,
-                      n.acceleration.evaluations = NA)
+                      n.acceleration.evaluations = NA,
+                      wall.time = as.numeric(proc.time()[3]-time.start))
 
   }
 
