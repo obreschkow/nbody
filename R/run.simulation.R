@@ -74,6 +74,8 @@
 #' \item{v}{k-by-N-by-3 array giving the 3D velocities of the N particles in k snapshots.}
 #' \item{n.snapshots}{total number of snapshots.}
 #' \item{n.iterations}{total number of iterations used to run the simulation.}
+#' \item{n.acceleration.evaluations}{total number of acceleration evaluations.}
+#' \item{wall.time}{total computing time in seconds.}
 #'
 #' @keywords N-body simulation
 #'
@@ -113,6 +115,8 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
 
 # Core simulation routine
 .run.sim = function(sim=NULL,verbose) {
+
+  time.start = proc.time()[3]
 
   # check ICs
   if (is.null(sim)) stop('Mandatory argument "sim" is missing.\n')
@@ -504,7 +508,8 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
 
     # finalise output
     sim$output = list(t = global$t.out[1:global$i.out], x = global$x.out[1:global$i.out,,], v = global$v.out[1:global$i.out,,],
-                      n.snapshots = global$i.out, n.iterations = n.iterations, n.acceleration.evaluations = global$n.acceleration.evaluations)
+                      n.snapshots = global$i.out, n.iterations = n.iterations, n.acceleration.evaluations = global$n.acceleration.evaluations,
+                      wall.time = proc.time()[3]-time.start)
 
   } else {
 

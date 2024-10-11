@@ -46,6 +46,8 @@ The routine returns the structured list of the input argument, with one sublist 
 \item{v}{k-by-N-by-3 array giving the 3D velocities of the N particles in k snapshots.}
 \item{n.snapshots}{total number of snapshots.}
 \item{n.iterations}{total number of iterations used to run the simulation.}
+\item{n.acceleration.evaluations}{total number of acceleration evaluations.}
+\item{wall.time}{total computing time in seconds.}
 }
 \description{
 Run direct N-body simulations using an adaptive block timestep.
