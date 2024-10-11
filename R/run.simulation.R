@@ -509,7 +509,7 @@ run.simulation = function(sim, measure.time=TRUE, verbose=TRUE) {
     # finalise output
     sim$output = list(t = global$t.out[1:global$i.out], x = global$x.out[1:global$i.out,,], v = global$v.out[1:global$i.out,,],
                       n.snapshots = global$i.out, n.iterations = n.iterations, n.acceleration.evaluations = global$n.acceleration.evaluations,
-                      wall.time = proc.time()[3]-time.start)
+                      wall.time = as.numeric(proc.time()[3]-time.start))
 
   } else {
 
